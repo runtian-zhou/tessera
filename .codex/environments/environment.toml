@@ -1,0 +1,10 @@
+version = 1
+name = "tessera"
+
+[setup]
+script = ""
+
+[[actions]]
+name = "Status"
+icon = "terminal"
+command = "git status --short --branch"
