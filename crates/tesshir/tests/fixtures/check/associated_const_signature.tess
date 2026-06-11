@@ -1,0 +1,13 @@
+interface Buffer {
+    const SIZE: usize;
+    fn read(self: &Self, buf: [u8; <Self as Buffer>::SIZE]) -> usize;
+}
+
+struct Page {}
+
+impl Buffer for Page {
+    const SIZE: usize = 4096;
+    fn read(self: &Self, buf: [u8; 4096]) -> usize {
+        0
+    }
+}

@@ -1,0 +1,3 @@
+struct Bad {
+    data: [u8; -1],
+}

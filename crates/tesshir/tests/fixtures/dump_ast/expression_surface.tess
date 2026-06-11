@@ -1,0 +1,14 @@
+fn inc(x: i32) -> i32 {
+    x + 1
+}
+
+fn ops(a: i32, b: i32, arr: [i32; 4], flag: bool) -> i32 {
+    let z: i32 = 0;
+    z = inc(arr[0]);
+    let bits = ((a & b) | (a ^ b)) << 1 >> 1;
+    if flag && !false {
+        bits
+    } else {
+        return a;
+    }
+}

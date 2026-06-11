@@ -1,0 +1,4 @@
+Error: check/enum_definition_errors.tess:3:9: duplicate enum discriminant `1`
+Error: check/enum_definition_errors.tess:4:9: discriminant `256` does not fit in u8
+Error: check/enum_definition_errors.tess:5:20: only unit enum variants may have explicit discriminants
+Error: check/enum_definition_errors.tess:6:22: duplicate field `x`

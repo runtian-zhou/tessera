@@ -1,0 +1,3 @@
+interface Buffer {
+    const SIZE: u8 = 256;
+}

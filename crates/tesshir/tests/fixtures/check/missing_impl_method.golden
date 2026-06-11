@@ -1,0 +1,1 @@
+Error: check/missing_impl_method.tess:7:1: impl for `Reader` is missing method `read`

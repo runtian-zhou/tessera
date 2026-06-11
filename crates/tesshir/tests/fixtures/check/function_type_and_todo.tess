@@ -1,0 +1,7 @@
+struct Callback {
+    f: fn(i32) -> i32,
+}
+
+fn deferred() -> i32 {
+    todo
+}

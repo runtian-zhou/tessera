@@ -1,0 +1,1 @@
+Error: check/associated_const_impl_type_mismatch.tess:8:5: associated const `SIZE` has type `u8`, expected `usize`

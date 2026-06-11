@@ -1,0 +1,73 @@
+status: 0
+stdout:
+Node {
+    span: Span {
+        start: 0,
+        end: 27,
+    },
+    kind: ProgramKind {
+        items: [
+            Node {
+                span: Span {
+                    start: 0,
+                    end: 27,
+                },
+                kind: Fn(
+                    Node {
+                        span: Span {
+                            start: 0,
+                            end: 27,
+                        },
+                        kind: FnItemKind {
+                            name: "value",
+                            generics: [],
+                            where_predicates: [],
+                            params: [],
+                            ret: Node {
+                                span: Span {
+                                    start: 14,
+                                    end: 17,
+                                },
+                                kind: Int(
+                                    IntTy {
+                                        signedness: Signed,
+                                        width: W32,
+                                    },
+                                ),
+                            },
+                            body: Node {
+                                span: Span {
+                                    start: 18,
+                                    end: 27,
+                                },
+                                kind: Block(
+                                    Node {
+                                        span: Span {
+                                            start: 18,
+                                            end: 27,
+                                        },
+                                        kind: BlockKind {
+                                            stmts: [],
+                                            tail: Some(
+                                                Node {
+                                                    span: Span {
+                                                        start: 24,
+                                                        end: 25,
+                                                    },
+                                                    kind: IntLit(
+                                                        0,
+                                                    ),
+                                                },
+                                            ),
+                                        },
+                                    },
+                                ),
+                            },
+                        },
+                    },
+                ),
+            },
+        ],
+    },
+}
+stderr:

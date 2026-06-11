@@ -1,0 +1,6 @@
+Error: check/struct_errors.tess:3:5: duplicate field `x`
+Error: check/struct_errors.tess:16:19: duplicate field `x`
+Error: check/struct_errors.tess:28:5: type `Point` has no field `z`
+Error: check/struct_errors.tess:12:5: missing field `y` for struct `Point`
+Error: check/struct_errors.tess:20:25: unknown field `z`
+Error: check/struct_errors.tess:24:16: field `x` has type `bool`, expected `i32`

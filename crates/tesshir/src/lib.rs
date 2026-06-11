@@ -6,10 +6,7 @@ pub mod samples;
 pub mod span;
 pub mod typeck;
 
-pub mod tess_hir {
-    pub use crate::ast::*;
-}
-
+pub use ast::*;
 pub use diagnostic::{Diagnostic, DiagnosticSeverity};
 pub use parser::{parse_program, ParseError};
 pub use span::{Node, Span};

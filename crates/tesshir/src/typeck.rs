@@ -147,7 +147,8 @@ impl<'a> Checker<'a> {
     }
 
     fn evaluate_all_consts(&mut self) {
-        let names: Vec<_> = self.const_items.keys().cloned().collect();
+        let mut names: Vec<_> = self.const_items.keys().cloned().collect();
+        names.sort();
         for name in names {
             self.eval_top_const(&name);
         }
@@ -183,7 +184,9 @@ impl<'a> Checker<'a> {
     }
 
     fn check_structs(&mut self) {
-        for item in self.structs.values().copied().collect::<Vec<_>>() {
+        let mut items = self.structs.values().copied().collect::<Vec<_>>();
+        items.sort_by(|a, b| a.kind.name.cmp(&b.kind.name));
+        for item in items {
             let scope = self.scope_from_generics(&item.kind.generics, &item.kind.where_predicates);
             self.check_generic_param_names(&item.kind.generics);
             self.check_duplicate_fields(&item.kind.fields);
@@ -195,7 +198,9 @@ impl<'a> Checker<'a> {
     }
 
     fn check_enums(&mut self) {
-        for item in self.enums.values().copied().collect::<Vec<_>>() {
+        let mut items = self.enums.values().copied().collect::<Vec<_>>();
+        items.sort_by(|a, b| a.kind.name.cmp(&b.kind.name));
+        for item in items {
             let scope = self.scope_from_generics(&item.kind.generics, &item.kind.where_predicates);
             self.check_generic_param_names(&item.kind.generics);
             self.check_where_predicates(&item.kind.where_predicates, &scope);
@@ -251,7 +256,9 @@ impl<'a> Checker<'a> {
     }
 
     fn check_interfaces(&mut self) {
-        for item in self.interfaces.values().copied().collect::<Vec<_>>() {
+        let mut items = self.interfaces.values().copied().collect::<Vec<_>>();
+        items.sort_by(|a, b| a.kind.name.cmp(&b.kind.name));
+        for item in items {
             let mut scope = self.scope_from_generics(&item.kind.generics, &[]);
             scope.obligations.push((
                 Node::new(item.span, TyKind::SelfTy),
@@ -335,7 +342,9 @@ impl<'a> Checker<'a> {
         let Some(reqs) = self.interface_reqs(interface_ref) else {
             return;
         };
-        for (name, sig) in &reqs.consts {
+        let mut const_reqs = reqs.consts.iter().collect::<Vec<_>>();
+        const_reqs.sort_by(|(a, _), (b, _)| a.cmp(b));
+        for (name, sig) in const_reqs {
             let provided = item
                 .kind
                 .members
@@ -368,7 +377,9 @@ impl<'a> Checker<'a> {
                 None => {}
             }
         }
-        for (name, required) in &reqs.methods {
+        let mut method_reqs = reqs.methods.iter().collect::<Vec<_>>();
+        method_reqs.sort_by(|(a, _), (b, _)| a.cmp(b));
+        for (name, required) in method_reqs {
             let provided = item
                 .kind
                 .members
@@ -440,7 +451,9 @@ impl<'a> Checker<'a> {
     }
 
     fn check_fns(&mut self) {
-        for item in self.fns.values().copied().collect::<Vec<_>>() {
+        let mut items = self.fns.values().copied().collect::<Vec<_>>();
+        items.sort_by(|a, b| a.kind.name.cmp(&b.kind.name));
+        for item in items {
             let scope = self.scope_from_generics(&item.kind.generics, &item.kind.where_predicates);
             self.check_generic_param_names(&item.kind.generics);
             self.check_where_predicates(&item.kind.where_predicates, &scope);
@@ -649,7 +662,12 @@ impl<'a> Checker<'a> {
                     self.error(path.span, format!("unknown struct `{}`", path_name(path)));
                     return self.error_ty(expr.span);
                 };
+                let mut seen_fields = HashSet::new();
                 for field in fields {
+                    if !seen_fields.insert(field.kind.name.clone()) {
+                        self.error(field.span, format!("duplicate field `{}`", field.kind.name));
+                        continue;
+                    }
                     let Some(expected) = struct_item
                         .kind
                         .fields
@@ -659,7 +677,8 @@ impl<'a> Checker<'a> {
                         self.error(field.span, format!("unknown field `{}`", field.kind.name));
                         continue;
                     };
-                    let actual = self.check_expr(&field.kind.expr, scope, locals, expected_ret);
+                    let actual =
+                        self.check_expr(&field.kind.expr, scope, locals, &expected.kind.ty);
                     if !self.ty_eq(&actual.ty, &expected.kind.ty, scope) {
                         self.error(
                             field.kind.expr.span,
@@ -668,6 +687,17 @@ impl<'a> Checker<'a> {
                                 field.kind.name,
                                 self.ty_display(&actual.ty),
                                 self.ty_display(&expected.kind.ty)
+                            ),
+                        );
+                    }
+                }
+                for expected in &struct_item.kind.fields {
+                    if !seen_fields.contains(&expected.kind.name) {
+                        self.error(
+                            expr.span,
+                            format!(
+                                "missing field `{}` for struct `{}`",
+                                expected.kind.name, struct_item.kind.name
                             ),
                         );
                     }
@@ -1031,6 +1061,31 @@ impl<'a> Checker<'a> {
                 }
             }
             (VariantPayloadKind::Struct(expected), EnumCtorArgsKind::Struct(actual)) => {
+                let mut seen_fields = HashSet::new();
+                for actual_field in actual {
+                    if !seen_fields.insert(actual_field.kind.name.clone()) {
+                        self.error(
+                            actual_field.span,
+                            format!(
+                                "duplicate field `{}` for variant `{variant}`",
+                                actual_field.kind.name
+                            ),
+                        );
+                        continue;
+                    }
+                    if !expected
+                        .iter()
+                        .any(|field| field.kind.name == actual_field.kind.name)
+                    {
+                        self.error(
+                            actual_field.span,
+                            format!(
+                                "unknown field `{}` for variant `{variant}`",
+                                actual_field.kind.name
+                            ),
+                        );
+                    }
+                }
                 for expected_field in expected {
                     let Some(actual_field) = actual
                         .iter()
@@ -1046,7 +1101,12 @@ impl<'a> Checker<'a> {
                         continue;
                     };
                     let actual_ty = self
-                        .check_expr(&actual_field.kind.expr, scope, locals, expected_ret)
+                        .check_expr(
+                            &actual_field.kind.expr,
+                            scope,
+                            locals,
+                            &expected_field.kind.ty,
+                        )
                         .ty;
                     self.unify_variant_ty(
                         &expected_field.kind.ty,
@@ -1433,15 +1493,16 @@ impl<'a> Checker<'a> {
     }
 
     fn lookup_field_type(&self, ty: &Ty, name: &str) -> Option<Ty> {
-        let TyKind::Path { path, .. } = &ty.kind else {
+        let TyKind::Path { path, args } = &ty.kind else {
             return None;
         };
         let item = self.structs.get(&path_name(path))?;
+        let substitutions = self.generic_arg_substitutions(&item.kind.generics, args);
         item.kind
             .fields
             .iter()
             .find(|field| field.kind.name == name)
-            .map(|field| field.kind.ty.clone())
+            .map(|field| self.apply_type_substitutions(&field.kind.ty, &substitutions))
     }
 
     fn check_ty_wf(&mut self, ty: &Ty, scope: &GenericScope, allow_self: bool) {

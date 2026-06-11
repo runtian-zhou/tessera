@@ -1,0 +1,573 @@
+Node {
+    span: Span {
+        start: 0,
+        end: 315,
+    },
+    kind: ProgramKind {
+        items: [
+            Node {
+                span: Span {
+                    start: 0,
+                    end: 40,
+                },
+                kind: Struct(
+                    Node {
+                        span: Span {
+                            start: 0,
+                            end: 40,
+                        },
+                        kind: StructItemKind {
+                            name: "Point",
+                            generics: [],
+                            where_predicates: [],
+                            fields: [
+                                Node {
+                                    span: Span {
+                                        start: 19,
+                                        end: 25,
+                                    },
+                                    kind: FieldKind {
+                                        name: "x",
+                                        ty: Node {
+                                            span: Span {
+                                                start: 22,
+                                                end: 25,
+                                            },
+                                            kind: Int(
+                                                IntTy {
+                                                    signedness: Signed,
+                                                    width: W32,
+                                                },
+                                            ),
+                                        },
+                                    },
+                                },
+                                Node {
+                                    span: Span {
+                                        start: 31,
+                                        end: 37,
+                                    },
+                                    kind: FieldKind {
+                                        name: "y",
+                                        ty: Node {
+                                            span: Span {
+                                                start: 34,
+                                                end: 37,
+                                            },
+                                            kind: Int(
+                                                IntTy {
+                                                    signedness: Signed,
+                                                    width: W32,
+                                                },
+                                            ),
+                                        },
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                ),
+            },
+            Node {
+                span: Span {
+                    start: 42,
+                    end: 119,
+                },
+                kind: Enum(
+                    Node {
+                        span: Span {
+                            start: 42,
+                            end: 119,
+                        },
+                        kind: EnumItemKind {
+                            name: "Message",
+                            generics: [],
+                            where_predicates: [],
+                            repr: None,
+                            variants: [
+                                Node {
+                                    span: Span {
+                                        start: 61,
+                                        end: 65,
+                                    },
+                                    kind: EnumVariantKind {
+                                        name: "Quit",
+                                        payload: Node {
+                                            span: Span {
+                                                start: 61,
+                                                end: 65,
+                                            },
+                                            kind: Unit,
+                                        },
+                                        discriminant: None,
+                                    },
+                                },
+                                Node {
+                                    span: Span {
+                                        start: 71,
+                                        end: 94,
+                                    },
+                                    kind: EnumVariantKind {
+                                        name: "Move",
+                                        payload: Node {
+                                            span: Span {
+                                                start: 71,
+                                                end: 94,
+                                            },
+                                            kind: Struct(
+                                                [
+                                                    Node {
+                                                        span: Span {
+                                                            start: 78,
+                                                            end: 84,
+                                                        },
+                                                        kind: FieldKind {
+                                                            name: "x",
+                                                            ty: Node {
+                                                                span: Span {
+                                                                    start: 81,
+                                                                    end: 84,
+                                                                },
+                                                                kind: Int(
+                                                                    IntTy {
+                                                                        signedness: Signed,
+                                                                        width: W32,
+                                                                    },
+                                                                ),
+                                                            },
+                                                        },
+                                                    },
+                                                    Node {
+                                                        span: Span {
+                                                            start: 86,
+                                                            end: 92,
+                                                        },
+                                                        kind: FieldKind {
+                                                            name: "y",
+                                                            ty: Node {
+                                                                span: Span {
+                                                                    start: 89,
+                                                                    end: 92,
+                                                                },
+                                                                kind: Int(
+                                                                    IntTy {
+                                                                        signedness: Signed,
+                                                                        width: W32,
+                                                                    },
+                                                                ),
+                                                            },
+                                                        },
+                                                    },
+                                                ],
+                                            ),
+                                        },
+                                        discriminant: None,
+                                    },
+                                },
+                                Node {
+                                    span: Span {
+                                        start: 100,
+                                        end: 116,
+                                    },
+                                    kind: EnumVariantKind {
+                                        name: "Write",
+                                        payload: Node {
+                                            span: Span {
+                                                start: 100,
+                                                end: 116,
+                                            },
+                                            kind: Tuple(
+                                                [
+                                                    Node {
+                                                        span: Span {
+                                                            start: 106,
+                                                            end: 109,
+                                                        },
+                                                        kind: Int(
+                                                            IntTy {
+                                                                signedness: Signed,
+                                                                width: W32,
+                                                            },
+                                                        ),
+                                                    },
+                                                    Node {
+                                                        span: Span {
+                                                            start: 111,
+                                                            end: 115,
+                                                        },
+                                                        kind: Bool,
+                                                    },
+                                                ],
+                                            ),
+                                        },
+                                        discriminant: None,
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                ),
+            },
+            Node {
+                span: Span {
+                    start: 121,
+                    end: 315,
+                },
+                kind: Fn(
+                    Node {
+                        span: Span {
+                            start: 121,
+                            end: 315,
+                        },
+                        kind: FnItemKind {
+                            name: "handle",
+                            generics: [],
+                            where_predicates: [],
+                            params: [
+                                Node {
+                                    span: Span {
+                                        start: 131,
+                                        end: 147,
+                                    },
+                                    kind: ParamKind {
+                                        name: "message",
+                                        ty: Node {
+                                            span: Span {
+                                                start: 140,
+                                                end: 147,
+                                            },
+                                            kind: Path {
+                                                path: Node {
+                                                    span: Span {
+                                                        start: 140,
+                                                        end: 147,
+                                                    },
+                                                    kind: PathKind {
+                                                        segments: [
+                                                            "Message",
+                                                        ],
+                                                    },
+                                                },
+                                                args: [],
+                                            },
+                                        },
+                                    },
+                                },
+                            ],
+                            ret: Node {
+                                span: Span {
+                                    start: 152,
+                                    end: 155,
+                                },
+                                kind: Int(
+                                    IntTy {
+                                        signedness: Signed,
+                                        width: W32,
+                                    },
+                                ),
+                            },
+                            body: Node {
+                                span: Span {
+                                    start: 156,
+                                    end: 315,
+                                },
+                                kind: Block(
+                                    Node {
+                                        span: Span {
+                                            start: 156,
+                                            end: 315,
+                                        },
+                                        kind: BlockKind {
+                                            stmts: [],
+                                            tail: Some(
+                                                Node {
+                                                    span: Span {
+                                                        start: 162,
+                                                        end: 313,
+                                                    },
+                                                    kind: Match {
+                                                        scrutinee: Node {
+                                                            span: Span {
+                                                                start: 168,
+                                                                end: 175,
+                                                            },
+                                                            kind: Var(
+                                                                "message",
+                                                            ),
+                                                        },
+                                                        arms: [
+                                                            Node {
+                                                                span: Span {
+                                                                    start: 186,
+                                                                    end: 204,
+                                                                },
+                                                                kind: MatchArmKind {
+                                                                    pat: Node {
+                                                                        span: Span {
+                                                                            start: 186,
+                                                                            end: 199,
+                                                                        },
+                                                                        kind: EnumVariant {
+                                                                            enum_path: Node {
+                                                                                span: Span {
+                                                                                    start: 186,
+                                                                                    end: 199,
+                                                                                },
+                                                                                kind: PathKind {
+                                                                                    segments: [
+                                                                                        "Message",
+                                                                                    ],
+                                                                                },
+                                                                            },
+                                                                            variant: "Quit",
+                                                                            args: Node {
+                                                                                span: Span {
+                                                                                    start: 186,
+                                                                                    end: 199,
+                                                                                },
+                                                                                kind: Unit,
+                                                                            },
+                                                                        },
+                                                                    },
+                                                                    body: Node {
+                                                                        span: Span {
+                                                                            start: 203,
+                                                                            end: 204,
+                                                                        },
+                                                                        kind: IntLit(
+                                                                            0,
+                                                                        ),
+                                                                    },
+                                                                },
+                                                            },
+                                                            Node {
+                                                                span: Span {
+                                                                    start: 214,
+                                                                    end: 245,
+                                                                },
+                                                                kind: MatchArmKind {
+                                                                    pat: Node {
+                                                                        span: Span {
+                                                                            start: 214,
+                                                                            end: 236,
+                                                                        },
+                                                                        kind: EnumVariant {
+                                                                            enum_path: Node {
+                                                                                span: Span {
+                                                                                    start: 214,
+                                                                                    end: 227,
+                                                                                },
+                                                                                kind: PathKind {
+                                                                                    segments: [
+                                                                                        "Message",
+                                                                                    ],
+                                                                                },
+                                                                            },
+                                                                            variant: "Move",
+                                                                            args: Node {
+                                                                                span: Span {
+                                                                                    start: 227,
+                                                                                    end: 236,
+                                                                                },
+                                                                                kind: Struct(
+                                                                                    [
+                                                                                        Node {
+                                                                                            span: Span {
+                                                                                                start: 230,
+                                                                                                end: 231,
+                                                                                            },
+                                                                                            kind: FieldPatKind {
+                                                                                                name: "x",
+                                                                                                pat: Node {
+                                                                                                    span: Span {
+                                                                                                        start: 230,
+                                                                                                        end: 231,
+                                                                                                    },
+                                                                                                    kind: Binding {
+                                                                                                        name: "x",
+                                                                                                    },
+                                                                                                },
+                                                                                            },
+                                                                                        },
+                                                                                        Node {
+                                                                                            span: Span {
+                                                                                                start: 233,
+                                                                                                end: 234,
+                                                                                            },
+                                                                                            kind: FieldPatKind {
+                                                                                                name: "y",
+                                                                                                pat: Node {
+                                                                                                    span: Span {
+                                                                                                        start: 233,
+                                                                                                        end: 234,
+                                                                                                    },
+                                                                                                    kind: Binding {
+                                                                                                        name: "y",
+                                                                                                    },
+                                                                                                },
+                                                                                            },
+                                                                                        },
+                                                                                    ],
+                                                                                ),
+                                                                            },
+                                                                        },
+                                                                    },
+                                                                    body: Node {
+                                                                        span: Span {
+                                                                            start: 240,
+                                                                            end: 245,
+                                                                        },
+                                                                        kind: Binary {
+                                                                            op: Add,
+                                                                            lhs: Node {
+                                                                                span: Span {
+                                                                                    start: 240,
+                                                                                    end: 241,
+                                                                                },
+                                                                                kind: Var(
+                                                                                    "x",
+                                                                                ),
+                                                                            },
+                                                                            rhs: Node {
+                                                                                span: Span {
+                                                                                    start: 244,
+                                                                                    end: 245,
+                                                                                },
+                                                                                kind: Var(
+                                                                                    "y",
+                                                                                ),
+                                                                            },
+                                                                        },
+                                                                    },
+                                                                },
+                                                            },
+                                                            Node {
+                                                                span: Span {
+                                                                    start: 255,
+                                                                    end: 306,
+                                                                },
+                                                                kind: MatchArmKind {
+                                                                    pat: Node {
+                                                                        span: Span {
+                                                                            start: 255,
+                                                                            end: 278,
+                                                                        },
+                                                                        kind: EnumVariant {
+                                                                            enum_path: Node {
+                                                                                span: Span {
+                                                                                    start: 255,
+                                                                                    end: 269,
+                                                                                },
+                                                                                kind: PathKind {
+                                                                                    segments: [
+                                                                                        "Message",
+                                                                                    ],
+                                                                                },
+                                                                            },
+                                                                            variant: "Write",
+                                                                            args: Node {
+                                                                                span: Span {
+                                                                                    start: 269,
+                                                                                    end: 278,
+                                                                                },
+                                                                                kind: Tuple(
+                                                                                    [
+                                                                                        Node {
+                                                                                            span: Span {
+                                                                                                start: 270,
+                                                                                                end: 271,
+                                                                                            },
+                                                                                            kind: Binding {
+                                                                                                name: "n",
+                                                                                            },
+                                                                                        },
+                                                                                        Node {
+                                                                                            span: Span {
+                                                                                                start: 273,
+                                                                                                end: 277,
+                                                                                            },
+                                                                                            kind: Binding {
+                                                                                                name: "flag",
+                                                                                            },
+                                                                                        },
+                                                                                    ],
+                                                                                ),
+                                                                            },
+                                                                        },
+                                                                    },
+                                                                    body: Node {
+                                                                        span: Span {
+                                                                            start: 282,
+                                                                            end: 306,
+                                                                        },
+                                                                        kind: If {
+                                                                            cond: Node {
+                                                                                span: Span {
+                                                                                    start: 285,
+                                                                                    end: 289,
+                                                                                },
+                                                                                kind: Var(
+                                                                                    "flag",
+                                                                                ),
+                                                                            },
+                                                                            then_branch: Node {
+                                                                                span: Span {
+                                                                                    start: 290,
+                                                                                    end: 295,
+                                                                                },
+                                                                                kind: BlockKind {
+                                                                                    stmts: [],
+                                                                                    tail: Some(
+                                                                                        Node {
+                                                                                            span: Span {
+                                                                                                start: 292,
+                                                                                                end: 293,
+                                                                                            },
+                                                                                            kind: Var(
+                                                                                                "n",
+                                                                                            ),
+                                                                                        },
+                                                                                    ),
+                                                                                },
+                                                                            },
+                                                                            else_branch: Some(
+                                                                                Node {
+                                                                                    span: Span {
+                                                                                        start: 301,
+                                                                                        end: 306,
+                                                                                    },
+                                                                                    kind: BlockKind {
+                                                                                        stmts: [],
+                                                                                        tail: Some(
+                                                                                            Node {
+                                                                                                span: Span {
+                                                                                                    start: 303,
+                                                                                                    end: 304,
+                                                                                                },
+                                                                                                kind: IntLit(
+                                                                                                    0,
+                                                                                                ),
+                                                                                            },
+                                                                                        ),
+                                                                                    },
+                                                                                },
+                                                                            ),
+                                                                        },
+                                                                    },
+                                                                },
+                                                            },
+                                                        ],
+                                                    },
+                                                },
+                                            ),
+                                        },
+                                    },
+                                ),
+                            },
+                        },
+                    },
+                ),
+            },
+        ],
+    },
+}

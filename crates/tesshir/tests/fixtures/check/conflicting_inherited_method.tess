@@ -1,0 +1,9 @@
+interface ReadI32 {
+    fn read(self: &Self) -> i32;
+}
+
+interface ReadBool {
+    fn read(self: &Self) -> bool;
+}
+
+interface Both: ReadI32 + ReadBool {}

@@ -1,0 +1,4 @@
+status: 1
+stdout:
+stderr:
+Error: check/const_overflow.tess:1:17: const `BAD` value `256` does not fit in u8

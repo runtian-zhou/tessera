@@ -1,0 +1,44 @@
+struct Point {
+    x: i32,
+}
+
+enum Message {
+    Move { x: i32 },
+    Num(i32),
+    Quit,
+}
+
+fn bad_bool_pattern(value: i32) -> i32 {
+    match value {
+        true => 1,
+        _ => 2,
+    }
+}
+
+fn bad_int_pattern(value: bool) -> i32 {
+    match value {
+        0 => 1,
+        _ => 2,
+    }
+}
+
+fn bad_enum_pattern(point: Point) -> i32 {
+    match point {
+        Message::Quit => 0,
+        _ => 1,
+    }
+}
+
+fn bad_struct_pattern(message: Message) -> i32 {
+    match message {
+        Point { x } => x,
+        _ => 0,
+    }
+}
+
+fn bad_payload_pattern(message: Message) -> i32 {
+    match message {
+        Message::Num { x } => x,
+        _ => 0,
+    }
+}

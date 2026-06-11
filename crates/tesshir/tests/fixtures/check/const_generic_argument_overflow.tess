@@ -1,0 +1,7 @@
+struct Small<const N: u8> {
+    data: [u8; N],
+}
+
+struct Bad {
+    small: Small<256>,
+}

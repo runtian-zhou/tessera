@@ -1,0 +1,29 @@
+struct DuplicateField {
+    x: i32,
+    x: bool,
+}
+
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+fn missing() -> Point {
+    Point { x: 1 }
+}
+
+fn duplicate() -> Point {
+    Point { x: 1, x: 2, y: 3 }
+}
+
+fn unknown() -> Point {
+    Point { x: 1, y: 2, z: 3 }
+}
+
+fn wrong_type() -> Point {
+    Point { x: true, y: 2 }
+}
+
+fn field_missing(point: Point) -> i32 {
+    point.z
+}

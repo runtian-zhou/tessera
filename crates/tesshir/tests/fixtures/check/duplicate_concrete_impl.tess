@@ -1,0 +1,13 @@
+interface Reader {
+    fn read(self: &Self) -> i32;
+}
+
+struct File {}
+
+impl Reader for File {
+    fn read(self: &Self) -> i32 { 0 }
+}
+
+impl Reader for File {
+    fn read(self: &Self) -> i32 { 0 }
+}

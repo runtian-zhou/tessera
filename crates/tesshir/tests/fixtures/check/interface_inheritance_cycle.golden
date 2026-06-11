@@ -1,0 +1,2 @@
+Error: check/interface_inheritance_cycle.tess:5:14: interface inheritance cycle involving `A`
+Error: check/interface_inheritance_cycle.tess:1:14: interface inheritance cycle involving `B`

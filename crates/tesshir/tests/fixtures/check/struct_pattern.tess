@@ -1,0 +1,10 @@
+struct Pair {
+    x: i32,
+    y: i32,
+}
+
+fn first(pair: Pair) -> i32 {
+    match pair {
+        Pair { x, y: _ } => x,
+    }
+}

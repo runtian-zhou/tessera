@@ -1,0 +1,1 @@
+Error: check/associated_const_default_overflow.tess:2:22: associated const default `256` does not fit in u8

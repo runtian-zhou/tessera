@@ -1,0 +1,1 @@
+Error: check/const_generic_argument_overflow.tess:6:18: const argument for `N` has value `256` which does not fit in u8

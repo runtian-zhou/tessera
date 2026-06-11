@@ -1,0 +1,9 @@
+interface ParentBuffer {
+    const SIZE: usize;
+}
+
+interface ChildBuffer: ParentBuffer {}
+
+fn use_parent_size<T: ChildBuffer>(buf: [u8; <T as ParentBuffer>::SIZE]) -> usize {
+    0
+}

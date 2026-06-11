@@ -1,0 +1,8 @@
+struct Buffer<const N: usize> {
+    data: [u8; N],
+}
+
+struct Holder<const N: usize> {
+    buffer: Buffer<N>,
+    buffer_plus_one: Buffer<N + 1>,
+}

@@ -1,0 +1,11 @@
+enum Option<T> {
+    None,
+    Some(T),
+}
+
+fn unwrap_or_zero(x: Option<i32>) -> i32 {
+    match x {
+        Option::None => 0,
+        Option::Some(n) => n,
+    }
+}

@@ -1,0 +1,33 @@
+enum Message {
+    Quit,
+    Move { x: i32, y: i32 },
+    Write(i32),
+}
+
+fn bad_missing() -> Message {
+    Message::Move { x: 1 }
+}
+
+fn bad_unknown() -> Message {
+    Message::Move { x: 1, y: 2, z: 3 }
+}
+
+fn bad_duplicate() -> Message {
+    Message::Move { x: 1, x: 2, y: 3 }
+}
+
+fn bad_type() -> Message {
+    Message::Move { x: true, y: 2 }
+}
+
+fn bad_tuple() -> Message {
+    Message::Write(1, 2)
+}
+
+fn bad_form() -> Message {
+    Message::Quit(1)
+}
+
+fn bad_unknown_variant() -> Message {
+    Message::Nope
+}

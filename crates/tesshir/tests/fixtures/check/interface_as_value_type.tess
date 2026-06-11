@@ -1,0 +1,7 @@
+interface Reader {
+    fn read(self: &Self) -> i32;
+}
+
+fn bad(x: Reader) -> i32 {
+    0
+}

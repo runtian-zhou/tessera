@@ -1,0 +1,1 @@
+Error: check/interface_as_value_type.tess:5:11: interface `Reader` is not a value type; use a generic bound instead

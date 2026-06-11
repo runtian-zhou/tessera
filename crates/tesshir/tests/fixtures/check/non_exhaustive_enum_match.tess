@@ -1,0 +1,10 @@
+enum Option<T> {
+    None,
+    Some(T),
+}
+
+fn only_some(x: Option<i32>) -> i32 {
+    match x {
+        Option::Some(n) => n,
+    }
+}

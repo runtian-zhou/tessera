@@ -1,0 +1,7 @@
+Error: check/enum_constructor_errors.tess:16:27: duplicate field `x` for variant `Move`
+Error: check/enum_constructor_errors.tess:28:5: variant `Quit` payload form does not match constructor
+Error: check/enum_constructor_errors.tess:8:5: missing field `y` for variant `Move`
+Error: check/enum_constructor_errors.tess:24:5: variant `Write` expects 1 arguments
+Error: check/enum_constructor_errors.tess:20:21: constructor argument has type `bool`, expected `i32`
+Error: check/enum_constructor_errors.tess:12:33: unknown field `z` for variant `Move`
+Error: check/enum_constructor_errors.tess:32:5: unknown variant `Nope` for enum `Message`

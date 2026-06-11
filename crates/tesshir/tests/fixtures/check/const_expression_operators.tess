@@ -1,0 +1,8 @@
+const A: u8 = (((+1 + 2 - 1) * 4 / 2 % 3) << 2) as u8;
+const B: u8 = ((1 | 2) ^ (3 & 1)) as u8;
+const C: u8 = (8 >> 1) as u8;
+const NEG: i8 = -1;
+
+fn value() -> i32 {
+    0
+}

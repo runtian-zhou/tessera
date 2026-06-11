@@ -1,0 +1,5 @@
+const PAGE: usize = 4 * 1024;
+
+fn page() -> i32 where PAGE == 4097 {
+    0
+}

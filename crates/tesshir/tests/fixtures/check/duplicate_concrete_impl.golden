@@ -1,0 +1,1 @@
+Error: check/duplicate_concrete_impl.tess:11:1: conflicting impl of `Reader` for `File`

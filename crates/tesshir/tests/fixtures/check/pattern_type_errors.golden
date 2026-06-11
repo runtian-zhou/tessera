@@ -1,0 +1,7 @@
+Error: check/pattern_type_errors.tess:13:9: bool pattern applied to non-bool value
+Error: check/pattern_type_errors.tess:27:9: enum variant pattern applied to non-matching enum type
+Error: check/pattern_type_errors.tess:20:9: integer pattern applied to non-integer value
+Error: check/pattern_type_errors.tess:41:9: enum pattern payload form does not match variant
+Error: check/pattern_type_errors.tess:41:31: unknown variable `x`
+Error: check/pattern_type_errors.tess:34:9: struct pattern applied to non-matching struct type
+Error: check/pattern_type_errors.tess:34:24: unknown variable `x`

@@ -1,0 +1,594 @@
+Node {
+    span: Span {
+        start: 0,
+        end: 258,
+    },
+    kind: ProgramKind {
+        items: [
+            Node {
+                span: Span {
+                    start: 0,
+                    end: 35,
+                },
+                kind: Fn(
+                    Node {
+                        span: Span {
+                            start: 0,
+                            end: 35,
+                        },
+                        kind: FnItemKind {
+                            name: "inc",
+                            generics: [],
+                            where_predicates: [],
+                            params: [
+                                Node {
+                                    span: Span {
+                                        start: 7,
+                                        end: 13,
+                                    },
+                                    kind: ParamKind {
+                                        name: "x",
+                                        ty: Node {
+                                            span: Span {
+                                                start: 10,
+                                                end: 13,
+                                            },
+                                            kind: Int(
+                                                IntTy {
+                                                    signedness: Signed,
+                                                    width: W32,
+                                                },
+                                            ),
+                                        },
+                                    },
+                                },
+                            ],
+                            ret: Node {
+                                span: Span {
+                                    start: 18,
+                                    end: 21,
+                                },
+                                kind: Int(
+                                    IntTy {
+                                        signedness: Signed,
+                                        width: W32,
+                                    },
+                                ),
+                            },
+                            body: Node {
+                                span: Span {
+                                    start: 22,
+                                    end: 35,
+                                },
+                                kind: Block(
+                                    Node {
+                                        span: Span {
+                                            start: 22,
+                                            end: 35,
+                                        },
+                                        kind: BlockKind {
+                                            stmts: [],
+                                            tail: Some(
+                                                Node {
+                                                    span: Span {
+                                                        start: 28,
+                                                        end: 33,
+                                                    },
+                                                    kind: Binary {
+                                                        op: Add,
+                                                        lhs: Node {
+                                                            span: Span {
+                                                                start: 28,
+                                                                end: 29,
+                                                            },
+                                                            kind: Var(
+                                                                "x",
+                                                            ),
+                                                        },
+                                                        rhs: Node {
+                                                            span: Span {
+                                                                start: 32,
+                                                                end: 33,
+                                                            },
+                                                            kind: IntLit(
+                                                                1,
+                                                            ),
+                                                        },
+                                                    },
+                                                },
+                                            ),
+                                        },
+                                    },
+                                ),
+                            },
+                        },
+                    },
+                ),
+            },
+            Node {
+                span: Span {
+                    start: 37,
+                    end: 258,
+                },
+                kind: Fn(
+                    Node {
+                        span: Span {
+                            start: 37,
+                            end: 258,
+                        },
+                        kind: FnItemKind {
+                            name: "ops",
+                            generics: [],
+                            where_predicates: [],
+                            params: [
+                                Node {
+                                    span: Span {
+                                        start: 44,
+                                        end: 50,
+                                    },
+                                    kind: ParamKind {
+                                        name: "a",
+                                        ty: Node {
+                                            span: Span {
+                                                start: 47,
+                                                end: 50,
+                                            },
+                                            kind: Int(
+                                                IntTy {
+                                                    signedness: Signed,
+                                                    width: W32,
+                                                },
+                                            ),
+                                        },
+                                    },
+                                },
+                                Node {
+                                    span: Span {
+                                        start: 52,
+                                        end: 58,
+                                    },
+                                    kind: ParamKind {
+                                        name: "b",
+                                        ty: Node {
+                                            span: Span {
+                                                start: 55,
+                                                end: 58,
+                                            },
+                                            kind: Int(
+                                                IntTy {
+                                                    signedness: Signed,
+                                                    width: W32,
+                                                },
+                                            ),
+                                        },
+                                    },
+                                },
+                                Node {
+                                    span: Span {
+                                        start: 60,
+                                        end: 73,
+                                    },
+                                    kind: ParamKind {
+                                        name: "arr",
+                                        ty: Node {
+                                            span: Span {
+                                                start: 65,
+                                                end: 73,
+                                            },
+                                            kind: Array {
+                                                elem: Node {
+                                                    span: Span {
+                                                        start: 66,
+                                                        end: 69,
+                                                    },
+                                                    kind: Int(
+                                                        IntTy {
+                                                            signedness: Signed,
+                                                            width: W32,
+                                                        },
+                                                    ),
+                                                },
+                                                len: Node {
+                                                    span: Span {
+                                                        start: 71,
+                                                        end: 72,
+                                                    },
+                                                    kind: IntLit(
+                                                        4,
+                                                    ),
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                                Node {
+                                    span: Span {
+                                        start: 75,
+                                        end: 85,
+                                    },
+                                    kind: ParamKind {
+                                        name: "flag",
+                                        ty: Node {
+                                            span: Span {
+                                                start: 81,
+                                                end: 85,
+                                            },
+                                            kind: Bool,
+                                        },
+                                    },
+                                },
+                            ],
+                            ret: Node {
+                                span: Span {
+                                    start: 90,
+                                    end: 93,
+                                },
+                                kind: Int(
+                                    IntTy {
+                                        signedness: Signed,
+                                        width: W32,
+                                    },
+                                ),
+                            },
+                            body: Node {
+                                span: Span {
+                                    start: 94,
+                                    end: 258,
+                                },
+                                kind: Block(
+                                    Node {
+                                        span: Span {
+                                            start: 94,
+                                            end: 258,
+                                        },
+                                        kind: BlockKind {
+                                            stmts: [
+                                                Node {
+                                                    span: Span {
+                                                        start: 100,
+                                                        end: 115,
+                                                    },
+                                                    kind: Let(
+                                                        Node {
+                                                            span: Span {
+                                                                start: 100,
+                                                                end: 114,
+                                                            },
+                                                            kind: LetStmtKind {
+                                                                name: "z",
+                                                                ty: Some(
+                                                                    Node {
+                                                                        span: Span {
+                                                                            start: 107,
+                                                                            end: 110,
+                                                                        },
+                                                                        kind: Int(
+                                                                            IntTy {
+                                                                                signedness: Signed,
+                                                                                width: W32,
+                                                                            },
+                                                                        ),
+                                                                    },
+                                                                ),
+                                                                init: Some(
+                                                                    Node {
+                                                                        span: Span {
+                                                                            start: 113,
+                                                                            end: 114,
+                                                                        },
+                                                                        kind: IntLit(
+                                                                            0,
+                                                                        ),
+                                                                    },
+                                                                ),
+                                                            },
+                                                        },
+                                                    ),
+                                                },
+                                                Node {
+                                                    span: Span {
+                                                        start: 120,
+                                                        end: 136,
+                                                    },
+                                                    kind: Semi(
+                                                        Node {
+                                                            span: Span {
+                                                                start: 120,
+                                                                end: 135,
+                                                            },
+                                                            kind: Assign {
+                                                                lhs: Node {
+                                                                    span: Span {
+                                                                        start: 120,
+                                                                        end: 121,
+                                                                    },
+                                                                    kind: Var(
+                                                                        "z",
+                                                                    ),
+                                                                },
+                                                                rhs: Node {
+                                                                    span: Span {
+                                                                        start: 124,
+                                                                        end: 135,
+                                                                    },
+                                                                    kind: Call {
+                                                                        callee: Node {
+                                                                            span: Span {
+                                                                                start: 124,
+                                                                                end: 127,
+                                                                            },
+                                                                            kind: Var(
+                                                                                "inc",
+                                                                            ),
+                                                                        },
+                                                                        args: [
+                                                                            Node {
+                                                                                span: Span {
+                                                                                    start: 128,
+                                                                                    end: 134,
+                                                                                },
+                                                                                kind: Index {
+                                                                                    base: Node {
+                                                                                        span: Span {
+                                                                                            start: 128,
+                                                                                            end: 131,
+                                                                                        },
+                                                                                        kind: Var(
+                                                                                            "arr",
+                                                                                        ),
+                                                                                    },
+                                                                                    index: Node {
+                                                                                        span: Span {
+                                                                                            start: 132,
+                                                                                            end: 133,
+                                                                                        },
+                                                                                        kind: IntLit(
+                                                                                            0,
+                                                                                        ),
+                                                                                    },
+                                                                                },
+                                                                            },
+                                                                        ],
+                                                                    },
+                                                                },
+                                                            },
+                                                        },
+                                                    ),
+                                                },
+                                                Node {
+                                                    span: Span {
+                                                        start: 141,
+                                                        end: 182,
+                                                    },
+                                                    kind: Let(
+                                                        Node {
+                                                            span: Span {
+                                                                start: 141,
+                                                                end: 181,
+                                                            },
+                                                            kind: LetStmtKind {
+                                                                name: "bits",
+                                                                ty: None,
+                                                                init: Some(
+                                                                    Node {
+                                                                        span: Span {
+                                                                            start: 152,
+                                                                            end: 181,
+                                                                        },
+                                                                        kind: Binary {
+                                                                            op: Shr,
+                                                                            lhs: Node {
+                                                                                span: Span {
+                                                                                    start: 152,
+                                                                                    end: 176,
+                                                                                },
+                                                                                kind: Binary {
+                                                                                    op: Shl,
+                                                                                    lhs: Node {
+                                                                                        span: Span {
+                                                                                            start: 152,
+                                                                                            end: 171,
+                                                                                        },
+                                                                                        kind: Binary {
+                                                                                            op: BitOr,
+                                                                                            lhs: Node {
+                                                                                                span: Span {
+                                                                                                    start: 153,
+                                                                                                    end: 160,
+                                                                                                },
+                                                                                                kind: Binary {
+                                                                                                    op: BitAnd,
+                                                                                                    lhs: Node {
+                                                                                                        span: Span {
+                                                                                                            start: 154,
+                                                                                                            end: 155,
+                                                                                                        },
+                                                                                                        kind: Var(
+                                                                                                            "a",
+                                                                                                        ),
+                                                                                                    },
+                                                                                                    rhs: Node {
+                                                                                                        span: Span {
+                                                                                                            start: 158,
+                                                                                                            end: 159,
+                                                                                                        },
+                                                                                                        kind: Var(
+                                                                                                            "b",
+                                                                                                        ),
+                                                                                                    },
+                                                                                                },
+                                                                                            },
+                                                                                            rhs: Node {
+                                                                                                span: Span {
+                                                                                                    start: 163,
+                                                                                                    end: 170,
+                                                                                                },
+                                                                                                kind: Binary {
+                                                                                                    op: BitXor,
+                                                                                                    lhs: Node {
+                                                                                                        span: Span {
+                                                                                                            start: 164,
+                                                                                                            end: 165,
+                                                                                                        },
+                                                                                                        kind: Var(
+                                                                                                            "a",
+                                                                                                        ),
+                                                                                                    },
+                                                                                                    rhs: Node {
+                                                                                                        span: Span {
+                                                                                                            start: 168,
+                                                                                                            end: 169,
+                                                                                                        },
+                                                                                                        kind: Var(
+                                                                                                            "b",
+                                                                                                        ),
+                                                                                                    },
+                                                                                                },
+                                                                                            },
+                                                                                        },
+                                                                                    },
+                                                                                    rhs: Node {
+                                                                                        span: Span {
+                                                                                            start: 175,
+                                                                                            end: 176,
+                                                                                        },
+                                                                                        kind: IntLit(
+                                                                                            1,
+                                                                                        ),
+                                                                                    },
+                                                                                },
+                                                                            },
+                                                                            rhs: Node {
+                                                                                span: Span {
+                                                                                    start: 180,
+                                                                                    end: 181,
+                                                                                },
+                                                                                kind: IntLit(
+                                                                                    1,
+                                                                                ),
+                                                                            },
+                                                                        },
+                                                                    },
+                                                                ),
+                                                            },
+                                                        },
+                                                    ),
+                                                },
+                                            ],
+                                            tail: Some(
+                                                Node {
+                                                    span: Span {
+                                                        start: 187,
+                                                        end: 256,
+                                                    },
+                                                    kind: If {
+                                                        cond: Node {
+                                                            span: Span {
+                                                                start: 190,
+                                                                end: 204,
+                                                            },
+                                                            kind: Binary {
+                                                                op: And,
+                                                                lhs: Node {
+                                                                    span: Span {
+                                                                        start: 190,
+                                                                        end: 194,
+                                                                    },
+                                                                    kind: Var(
+                                                                        "flag",
+                                                                    ),
+                                                                },
+                                                                rhs: Node {
+                                                                    span: Span {
+                                                                        start: 198,
+                                                                        end: 204,
+                                                                    },
+                                                                    kind: Unary {
+                                                                        op: Not,
+                                                                        expr: Node {
+                                                                            span: Span {
+                                                                                start: 199,
+                                                                                end: 204,
+                                                                            },
+                                                                            kind: BoolLit(
+                                                                                false,
+                                                                            ),
+                                                                        },
+                                                                    },
+                                                                },
+                                                            },
+                                                        },
+                                                        then_branch: Node {
+                                                            span: Span {
+                                                                start: 205,
+                                                                end: 225,
+                                                            },
+                                                            kind: BlockKind {
+                                                                stmts: [],
+                                                                tail: Some(
+                                                                    Node {
+                                                                        span: Span {
+                                                                            start: 215,
+                                                                            end: 219,
+                                                                        },
+                                                                        kind: Var(
+                                                                            "bits",
+                                                                        ),
+                                                                    },
+                                                                ),
+                                                            },
+                                                        },
+                                                        else_branch: Some(
+                                                            Node {
+                                                                span: Span {
+                                                                    start: 231,
+                                                                    end: 256,
+                                                                },
+                                                                kind: BlockKind {
+                                                                    stmts: [
+                                                                        Node {
+                                                                            span: Span {
+                                                                                start: 241,
+                                                                                end: 250,
+                                                                            },
+                                                                            kind: Semi(
+                                                                                Node {
+                                                                                    span: Span {
+                                                                                        start: 241,
+                                                                                        end: 249,
+                                                                                    },
+                                                                                    kind: Return(
+                                                                                        Some(
+                                                                                            Node {
+                                                                                                span: Span {
+                                                                                                    start: 248,
+                                                                                                    end: 249,
+                                                                                                },
+                                                                                                kind: Var(
+                                                                                                    "a",
+                                                                                                ),
+                                                                                            },
+                                                                                        ),
+                                                                                    ),
+                                                                                },
+                                                                            ),
+                                                                        },
+                                                                    ],
+                                                                    tail: None,
+                                                                },
+                                                            },
+                                                        ),
+                                                    },
+                                                },
+                                            ),
+                                        },
+                                    },
+                                ),
+                            },
+                        },
+                    },
+                ),
+            },
+        ],
+    },
+}

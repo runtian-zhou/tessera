@@ -1,0 +1,1 @@
+Error: check/non_exhaustive_enum_match.tess:7:5: match is not exhaustive: missing `None`

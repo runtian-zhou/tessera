@@ -1,0 +1,7 @@
+struct Wrap<T> {
+    value: T,
+}
+
+struct Nested {
+    value: Wrap<Wrap<i32>>,
+}

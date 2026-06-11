@@ -1,0 +1,7 @@
+interface A: B {
+    fn a(self: &Self) -> i32;
+}
+
+interface B: A {
+    fn b(self: &Self) -> i32;
+}

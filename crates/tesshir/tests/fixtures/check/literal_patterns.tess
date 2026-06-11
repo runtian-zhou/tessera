@@ -1,0 +1,19 @@
+fn bool_to_i32(value: bool) -> i32 {
+    match value {
+        true => 1,
+        false => 0,
+    }
+}
+
+fn zero_or_one(value: i32) -> i32 {
+    match value {
+        0 => 0,
+        _ => 1,
+    }
+}
+
+fn unit_to_i32(value: ()) -> i32 {
+    match value {
+        () => 0,
+    }
+}

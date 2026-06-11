@@ -1,0 +1,17 @@
+const PAGE_SIZE: usize = 4 * 1024;
+
+interface Reader {
+    fn read(self: &mut Self, buf: [u8; PAGE_SIZE]) -> i32;
+}
+
+struct File {}
+
+impl Reader for File {
+    fn read(self: &mut Self, buf: [u8; 4096]) -> i32 {
+        0
+    }
+}
+
+fn consume<T: Reader>(r: &mut T, buf: [u8; PAGE_SIZE]) -> i32 {
+    r.read(buf)
+}

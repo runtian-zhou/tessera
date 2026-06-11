@@ -1,0 +1,9 @@
+interface Buffer {
+    const SIZE: usize;
+}
+
+struct Page {}
+
+impl Buffer for Page {
+    const SIZE: u8 = 1;
+}
