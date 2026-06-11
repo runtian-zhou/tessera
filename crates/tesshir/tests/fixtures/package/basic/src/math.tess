@@ -1,0 +1,8 @@
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+fn sum(p: Point) -> i32 {
+    p.x + p.y
+}

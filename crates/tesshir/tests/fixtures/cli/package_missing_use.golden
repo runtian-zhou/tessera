@@ -1,0 +1,5 @@
+status: 1
+stdout:
+stderr:
+Error: package/missing_use/src/main.tess:1:16: path `math::Point` requires an explicit `use math;` dependency
+Error: package/missing_use/src/main.tess:2:5: path `math::...` requires an explicit `use math;` dependency

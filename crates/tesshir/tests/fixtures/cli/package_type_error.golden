@@ -1,0 +1,4 @@
+status: 1
+stdout:
+stderr:
+Error: package/type_error/src/math.tess:6:5: binary arithmetic expects matching integer operands

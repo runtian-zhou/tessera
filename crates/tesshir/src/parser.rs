@@ -49,6 +49,10 @@ impl Parser {
     }
 
     fn parse_item(&mut self) -> PResult<Item> {
+        if self.at_keyword(Keyword::Use) {
+            let item = self.parse_use_item()?;
+            return Some(Node::new(item.span, ItemKind::Use(item)));
+        }
         if self.at_keyword(Keyword::Const) {
             let item = self.parse_const_item()?;
             return Some(Node::new(item.span, ItemKind::Const(item)));
@@ -76,6 +80,13 @@ impl Parser {
         let span = self.peek().span;
         self.error(span, "expected top-level item");
         None
+    }
+
+    fn parse_use_item(&mut self) -> PResult<UseItem> {
+        let start = self.expect_keyword(Keyword::Use)?.span.start;
+        let path = self.parse_path()?;
+        let end = self.expect_symbol(TokSymbol::Semi)?.span.end;
+        Some(Node::new(Span::new(start, end), UseItemKind { path }))
     }
 
     fn parse_const_item(&mut self) -> PResult<ConstItem> {

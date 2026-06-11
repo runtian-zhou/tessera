@@ -1,0 +1,136 @@
+Node {
+    span: Span {
+        start: 0,
+        end: 58,
+    },
+    kind: ProgramKind {
+        items: [
+            Node {
+                span: Span {
+                    start: 0,
+                    end: 16,
+                },
+                kind: Use(
+                    Node {
+                        span: Span {
+                            start: 0,
+                            end: 16,
+                        },
+                        kind: UseItemKind {
+                            path: Node {
+                                span: Span {
+                                    start: 4,
+                                    end: 15,
+                                },
+                                kind: PathKind {
+                                    segments: [
+                                        "math",
+                                        "Point",
+                                    ],
+                                },
+                            },
+                        },
+                    },
+                ),
+            },
+            Node {
+                span: Span {
+                    start: 18,
+                    end: 58,
+                },
+                kind: Fn(
+                    Node {
+                        span: Span {
+                            start: 18,
+                            end: 58,
+                        },
+                        kind: FnItemKind {
+                            name: "identity",
+                            generics: [],
+                            where_predicates: [],
+                            params: [
+                                Node {
+                                    span: Span {
+                                        start: 30,
+                                        end: 38,
+                                    },
+                                    kind: ParamKind {
+                                        name: "p",
+                                        ty: Node {
+                                            span: Span {
+                                                start: 33,
+                                                end: 38,
+                                            },
+                                            kind: Path {
+                                                path: Node {
+                                                    span: Span {
+                                                        start: 33,
+                                                        end: 38,
+                                                    },
+                                                    kind: PathKind {
+                                                        segments: [
+                                                            "Point",
+                                                        ],
+                                                    },
+                                                },
+                                                args: [],
+                                            },
+                                        },
+                                    },
+                                },
+                            ],
+                            ret: Node {
+                                span: Span {
+                                    start: 43,
+                                    end: 48,
+                                },
+                                kind: Path {
+                                    path: Node {
+                                        span: Span {
+                                            start: 43,
+                                            end: 48,
+                                        },
+                                        kind: PathKind {
+                                            segments: [
+                                                "Point",
+                                            ],
+                                        },
+                                    },
+                                    args: [],
+                                },
+                            },
+                            body: Node {
+                                span: Span {
+                                    start: 49,
+                                    end: 58,
+                                },
+                                kind: Block(
+                                    Node {
+                                        span: Span {
+                                            start: 49,
+                                            end: 58,
+                                        },
+                                        kind: BlockKind {
+                                            stmts: [],
+                                            tail: Some(
+                                                Node {
+                                                    span: Span {
+                                                        start: 55,
+                                                        end: 56,
+                                                    },
+                                                    kind: Var(
+                                                        "p",
+                                                    ),
+                                                },
+                                            ),
+                                        },
+                                    },
+                                ),
+                            },
+                        },
+                    },
+                ),
+            },
+        ],
+    },
+}

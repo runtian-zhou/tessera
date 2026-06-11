@@ -7,6 +7,7 @@ pub type Symbol = String;
 pub type Path = Node<PathKind>;
 pub type Program = Node<ProgramKind>;
 pub type Item = Node<ItemKind>;
+pub type UseItem = Node<UseItemKind>;
 pub type Ty = Node<TyKind>;
 pub type GenericArg = Node<GenericArgKind>;
 pub type ConstExpr = Node<ConstExprKind>;
@@ -68,12 +69,18 @@ pub struct ProgramKind {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ItemKind {
+    Use(UseItem),
     Const(ConstItem),
     Struct(StructItem),
     Enum(EnumItem),
     Interface(InterfaceItem),
     Impl(ImplItem),
     Fn(FnItem),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct UseItemKind {
+    pub path: Path,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]

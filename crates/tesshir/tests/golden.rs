@@ -11,28 +11,44 @@ const FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures");
 const CLI_CASES: &[CliCase] = &[
     CliCase {
         name: "check_ok",
-        fixture_dir: "check",
-        fixture: "reader_interface",
+        input: "check/reader_interface.tess",
         args: &[],
     },
     CliCase {
         name: "dump_ast",
-        fixture_dir: "dump_ast",
-        fixture: "simple_fn",
+        input: "dump_ast/simple_fn.tess",
         args: &["--dump-ast"],
     },
     CliCase {
         name: "type_error",
-        fixture_dir: "check",
-        fixture: "const_overflow",
+        input: "check/const_overflow.tess",
+        args: &[],
+    },
+    CliCase {
+        name: "package_check",
+        input: "package/basic",
+        args: &[],
+    },
+    CliCase {
+        name: "package_type_error",
+        input: "package/type_error",
+        args: &[],
+    },
+    CliCase {
+        name: "package_missing_use",
+        input: "package/missing_use",
+        args: &[],
+    },
+    CliCase {
+        name: "package_std_option",
+        input: "package/std_option",
         args: &[],
     },
 ];
 
 struct CliCase {
     name: &'static str,
-    fixture_dir: &'static str,
-    fixture: &'static str,
+    input: &'static str,
     args: &'static [&'static str],
 }
 
@@ -57,7 +73,7 @@ fn dump_ast_goldens() {
 #[test]
 fn cli_goldens() {
     for case in CLI_CASES {
-        let source_path = fixture_source(case.fixture_dir, case.fixture);
+        let source_path = Path::new(FIXTURES).join(case.input);
         let golden_path = fixture_golden("cli", case.name);
         let output = Command::new(env!("CARGO_BIN_EXE_tesshir"))
             .args(case.args)
@@ -139,10 +155,6 @@ fn assert_or_update_golden(path: &Path, actual: &str) {
         "golden mismatch for `{}`; rerun with TESSHIR_UPDATE_GOLDEN=1 to update",
         path.display()
     );
-}
-
-fn fixture_source(dir: &str, name: &str) -> PathBuf {
-    Path::new(FIXTURES).join(dir).join(format!("{name}.tess"))
 }
 
 fn fixture_golden(dir: &str, name: &str) -> PathBuf {

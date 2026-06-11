@@ -92,6 +92,7 @@ impl<'a> Checker<'a> {
         let mut type_names = HashMap::<String, Span>::new();
         for item in &self.program.kind.items {
             match &item.kind {
+                ItemKind::Use(_) => {}
                 ItemKind::Const(item) => {
                     self.insert_unique_const(&item.kind.name, item.span);
                     self.const_items.insert(item.kind.name.clone(), item);
@@ -658,60 +659,7 @@ impl<'a> Checker<'a> {
                 expected_ret,
             ),
             ExprKind::StructLit { path, fields } => {
-                let Some(struct_item) = self.structs.get(&path_name(path)).copied() else {
-                    self.error(path.span, format!("unknown struct `{}`", path_name(path)));
-                    return self.error_ty(expr.span);
-                };
-                let mut seen_fields = HashSet::new();
-                for field in fields {
-                    if !seen_fields.insert(field.kind.name.clone()) {
-                        self.error(field.span, format!("duplicate field `{}`", field.kind.name));
-                        continue;
-                    }
-                    let Some(expected) = struct_item
-                        .kind
-                        .fields
-                        .iter()
-                        .find(|decl| decl.kind.name == field.kind.name)
-                    else {
-                        self.error(field.span, format!("unknown field `{}`", field.kind.name));
-                        continue;
-                    };
-                    let actual =
-                        self.check_expr(&field.kind.expr, scope, locals, &expected.kind.ty);
-                    if !self.ty_eq(&actual.ty, &expected.kind.ty, scope) {
-                        self.error(
-                            field.kind.expr.span,
-                            format!(
-                                "field `{}` has type `{}`, expected `{}`",
-                                field.kind.name,
-                                self.ty_display(&actual.ty),
-                                self.ty_display(&expected.kind.ty)
-                            ),
-                        );
-                    }
-                }
-                for expected in &struct_item.kind.fields {
-                    if !seen_fields.contains(&expected.kind.name) {
-                        self.error(
-                            expr.span,
-                            format!(
-                                "missing field `{}` for struct `{}`",
-                                expected.kind.name, struct_item.kind.name
-                            ),
-                        );
-                    }
-                }
-                ExprTy {
-                    ty: Node::new(
-                        expr.span,
-                        TyKind::Path {
-                            path: path.clone(),
-                            args: vec![],
-                        },
-                    ),
-                    diverges: false,
-                }
+                self.check_struct_lit(expr.span, path, fields, scope, locals)
             }
             ExprKind::EnumCtor {
                 enum_path,
@@ -846,33 +794,8 @@ impl<'a> Checker<'a> {
         expected_ret: &Ty,
     ) -> ExprTy {
         if let ExprKind::Var(name) = &callee.kind {
-            if let Some(fn_item) = self.fns.get(name).copied() {
-                if fn_item.kind.params.len() != args.len() {
-                    self.error(
-                        span,
-                        format!(
-                            "function `{name}` expects {} arguments",
-                            fn_item.kind.params.len()
-                        ),
-                    );
-                }
-                for (arg, param) in args.iter().zip(&fn_item.kind.params) {
-                    let actual = self.check_expr(arg, scope, locals, &param.kind.ty);
-                    if !self.ty_eq(&actual.ty, &param.kind.ty, scope) {
-                        self.error(
-                            arg.span,
-                            format!(
-                                "argument has type `{}`, expected `{}`",
-                                self.ty_display(&actual.ty),
-                                self.ty_display(&param.kind.ty)
-                            ),
-                        );
-                    }
-                }
-                return ExprTy {
-                    ty: fn_item.kind.ret.clone(),
-                    diverges: false,
-                };
+            if let Some(result) = self.check_named_function_call(span, name, args, scope, locals) {
+                return result;
             }
         }
         let callee_ty = self.check_expr(callee, scope, locals, expected_ret);
@@ -899,6 +822,106 @@ impl<'a> Checker<'a> {
                 self.error(callee.span, "callee is not a function");
                 self.error_ty(span)
             }
+        }
+    }
+
+    fn check_named_function_call(
+        &mut self,
+        span: Span,
+        name: &str,
+        args: &[Expr],
+        scope: &GenericScope,
+        locals: &mut HashMap<String, Ty>,
+    ) -> Option<ExprTy> {
+        let fn_item = self.fns.get(name).copied()?;
+        if fn_item.kind.params.len() != args.len() {
+            self.error(
+                span,
+                format!(
+                    "function `{name}` expects {} arguments",
+                    fn_item.kind.params.len()
+                ),
+            );
+        }
+        for (arg, param) in args.iter().zip(&fn_item.kind.params) {
+            let actual = self.check_expr(arg, scope, locals, &param.kind.ty);
+            if !self.ty_eq(&actual.ty, &param.kind.ty, scope) {
+                self.error(
+                    arg.span,
+                    format!(
+                        "argument has type `{}`, expected `{}`",
+                        self.ty_display(&actual.ty),
+                        self.ty_display(&param.kind.ty)
+                    ),
+                );
+            }
+        }
+        Some(ExprTy {
+            ty: fn_item.kind.ret.clone(),
+            diverges: false,
+        })
+    }
+
+    fn check_struct_lit(
+        &mut self,
+        span: Span,
+        path: &Path,
+        fields: &[FieldExpr],
+        scope: &GenericScope,
+        locals: &mut HashMap<String, Ty>,
+    ) -> ExprTy {
+        let Some(struct_item) = self.structs.get(&path_name(path)).copied() else {
+            self.error(path.span, format!("unknown struct `{}`", path_name(path)));
+            return self.error_ty(span);
+        };
+        let mut seen_fields = HashSet::new();
+        for field in fields {
+            if !seen_fields.insert(field.kind.name.clone()) {
+                self.error(field.span, format!("duplicate field `{}`", field.kind.name));
+                continue;
+            }
+            let Some(expected) = struct_item
+                .kind
+                .fields
+                .iter()
+                .find(|decl| decl.kind.name == field.kind.name)
+            else {
+                self.error(field.span, format!("unknown field `{}`", field.kind.name));
+                continue;
+            };
+            let actual = self.check_expr(&field.kind.expr, scope, locals, &expected.kind.ty);
+            if !self.ty_eq(&actual.ty, &expected.kind.ty, scope) {
+                self.error(
+                    field.kind.expr.span,
+                    format!(
+                        "field `{}` has type `{}`, expected `{}`",
+                        field.kind.name,
+                        self.ty_display(&actual.ty),
+                        self.ty_display(&expected.kind.ty)
+                    ),
+                );
+            }
+        }
+        for expected in &struct_item.kind.fields {
+            if !seen_fields.contains(&expected.kind.name) {
+                self.error(
+                    span,
+                    format!(
+                        "missing field `{}` for struct `{}`",
+                        expected.kind.name, struct_item.kind.name
+                    ),
+                );
+            }
+        }
+        ExprTy {
+            ty: Node::new(
+                span,
+                TyKind::Path {
+                    path: path.clone(),
+                    args: vec![],
+                },
+            ),
+            diverges: false,
         }
     }
 
@@ -1024,6 +1047,21 @@ impl<'a> Checker<'a> {
     ) -> ExprTy {
         let enum_name = path_name(enum_path);
         let Some(enum_item) = self.enums.get(&enum_name).copied() else {
+            let member_path = path_with_segment(enum_path, variant, span);
+            let member_name = path_name(&member_path);
+            match &args.kind {
+                EnumCtorArgsKind::Tuple(actual) => {
+                    if let Some(result) =
+                        self.check_named_function_call(span, &member_name, actual, scope, locals)
+                    {
+                        return result;
+                    }
+                }
+                EnumCtorArgsKind::Struct(fields) if self.structs.contains_key(&member_name) => {
+                    return self.check_struct_lit(span, &member_path, fields, scope, locals);
+                }
+                _ => {}
+            }
             self.error(enum_path.span, format!("unknown enum `{enum_name}`"));
             return self.error_ty(span);
         };
@@ -1040,6 +1078,28 @@ impl<'a> Checker<'a> {
             return self.error_ty(span);
         };
         let mut substitutions = HashMap::<String, Ty>::new();
+        let enum_type_params = enum_item
+            .kind
+            .generics
+            .iter()
+            .filter_map(|generic| match &generic.kind {
+                GenericParamKind::Type { name, .. } => Some(name.clone()),
+                GenericParamKind::Const { .. } => None,
+            })
+            .collect::<HashSet<_>>();
+        let expected_enum_args = match &expected_ret.kind {
+            TyKind::Path { path, args } if path_name(path) == enum_name => Some(args.as_slice()),
+            _ => None,
+        };
+        if let Some(expected_args) = expected_enum_args {
+            for (generic, arg) in enum_item.kind.generics.iter().zip(expected_args) {
+                if let (GenericParamKind::Type { name, .. }, GenericArgKind::Ty(ty)) =
+                    (&generic.kind, &arg.kind)
+                {
+                    substitutions.insert(name.clone(), ty.clone());
+                }
+            }
+        }
         match (&variant_decl.kind.payload.kind, &args.kind) {
             (VariantPayloadKind::Unit, EnumCtorArgsKind::Unit) => {}
             (VariantPayloadKind::Tuple(expected), EnumCtorArgsKind::Tuple(actual)) => {
@@ -1055,6 +1115,7 @@ impl<'a> Checker<'a> {
                         expected,
                         &actual_ty,
                         &mut substitutions,
+                        &enum_type_params,
                         scope,
                         actual_expr.span,
                     );
@@ -1112,6 +1173,7 @@ impl<'a> Checker<'a> {
                         &expected_field.kind.ty,
                         &actual_ty,
                         &mut substitutions,
+                        &enum_type_params,
                         scope,
                         actual_field.span,
                     );
@@ -1123,7 +1185,7 @@ impl<'a> Checker<'a> {
             ),
         }
         let mut generic_args = vec![];
-        for generic in &enum_item.kind.generics {
+        for (idx, generic) in enum_item.kind.generics.iter().enumerate() {
             match &generic.kind {
                 GenericParamKind::Type { name, .. } => {
                     let ty = substitutions.get(name).cloned().unwrap_or_else(|| {
@@ -1138,10 +1200,14 @@ impl<'a> Checker<'a> {
                     generic_args.push(Node::new(ty.span, GenericArgKind::Ty(ty)));
                 }
                 GenericParamKind::Const { name, .. } => {
-                    generic_args.push(Node::new(
-                        span,
-                        GenericArgKind::Const(Node::new(span, ConstExprKind::Param(name.clone()))),
-                    ));
+                    let arg = expected_enum_args
+                        .and_then(|args| args.get(idx))
+                        .and_then(|arg| match &arg.kind {
+                            GenericArgKind::Const(expr) => Some(expr.clone()),
+                            GenericArgKind::Ty(_) => None,
+                        })
+                        .unwrap_or_else(|| Node::new(span, ConstExprKind::Param(name.clone())));
+                    generic_args.push(Node::new(span, GenericArgKind::Const(arg)));
                 }
             }
         }
@@ -1162,13 +1228,17 @@ impl<'a> Checker<'a> {
         expected: &Ty,
         actual: &Ty,
         substitutions: &mut HashMap<String, Ty>,
+        enum_type_params: &HashSet<String>,
         scope: &GenericScope,
         span: Span,
     ) {
         if let TyKind::Path { path, args } = &expected.kind {
             if path.kind.segments.len() == 1 && args.is_empty() {
                 let name = &path.kind.segments[0];
-                if scope.type_params.contains_key(name) || substitutions.contains_key(name) {
+                if enum_type_params.contains(name)
+                    || scope.type_params.contains_key(name)
+                    || substitutions.contains_key(name)
+                {
                     if let Some(existing) = substitutions.get(name) {
                         if !self.ty_eq(existing, actual, scope) {
                             self.error(
@@ -1276,6 +1346,20 @@ impl<'a> Checker<'a> {
                 let expected_enum = match &expected.kind {
                     TyKind::Path { path, args } if path_name(path) == enum_name => args,
                     _ => {
+                        let struct_path = path_with_segment(enum_path, variant, pat.span);
+                        if let EnumPatArgsKind::Struct(fields) = &args.kind {
+                            if self.structs.contains_key(&path_name(&struct_path)) {
+                                return self.check_struct_pat(
+                                    pat.span,
+                                    &struct_path,
+                                    fields,
+                                    expected,
+                                    scope,
+                                    locals,
+                                    seen_variants,
+                                );
+                            }
+                        }
                         self.error(
                             pat.span,
                             "enum variant pattern applied to non-matching enum type",
@@ -1338,57 +1422,67 @@ impl<'a> Checker<'a> {
                 }
                 false
             }
-            PatKind::Struct { path, fields } => {
-                let struct_name = path_name(path);
-                let expected_args = match &expected.kind {
-                    TyKind::Path { path, args } if path_name(path) == struct_name => args,
-                    _ => {
-                        self.error(
-                            pat.span,
-                            "struct pattern applied to non-matching struct type",
-                        );
-                        return false;
-                    }
-                };
-                let Some(struct_item) = self.structs.get(&struct_name).copied() else {
-                    self.error(path.span, format!("unknown struct `{struct_name}`"));
-                    return false;
-                };
-                let substitutions =
-                    self.generic_arg_substitutions(&struct_item.kind.generics, expected_args);
-                let mut seen_fields = HashSet::new();
-                for field_pat in fields {
-                    if !seen_fields.insert(field_pat.kind.name.clone()) {
-                        self.error(
-                            field_pat.span,
-                            format!("duplicate pattern field `{}`", field_pat.kind.name),
-                        );
-                        continue;
-                    }
-                    let Some(field) = struct_item
-                        .kind
-                        .fields
-                        .iter()
-                        .find(|field| field.kind.name == field_pat.kind.name)
-                    else {
-                        self.error(
-                            field_pat.span,
-                            format!("unknown field `{}`", field_pat.kind.name),
-                        );
-                        continue;
-                    };
-                    let field_ty = self.apply_type_substitutions(&field.kind.ty, &substitutions);
-                    let _ = self.check_pat(
-                        &field_pat.kind.pat,
-                        &field_ty,
-                        scope,
-                        locals,
-                        seen_variants,
-                    );
-                }
-                false
-            }
+            PatKind::Struct { path, fields } => self.check_struct_pat(
+                pat.span,
+                path,
+                fields,
+                expected,
+                scope,
+                locals,
+                seen_variants,
+            ),
         }
+    }
+
+    fn check_struct_pat(
+        &mut self,
+        span: Span,
+        path: &Path,
+        fields: &[FieldPat],
+        expected: &Ty,
+        scope: &GenericScope,
+        locals: &mut HashMap<String, Ty>,
+        seen_variants: &mut HashSet<String>,
+    ) -> bool {
+        let struct_name = path_name(path);
+        let expected_args = match &expected.kind {
+            TyKind::Path { path, args } if path_name(path) == struct_name => args,
+            _ => {
+                self.error(span, "struct pattern applied to non-matching struct type");
+                return false;
+            }
+        };
+        let Some(struct_item) = self.structs.get(&struct_name).copied() else {
+            self.error(path.span, format!("unknown struct `{struct_name}`"));
+            return false;
+        };
+        let substitutions =
+            self.generic_arg_substitutions(&struct_item.kind.generics, expected_args);
+        let mut seen_fields = HashSet::new();
+        for field_pat in fields {
+            if !seen_fields.insert(field_pat.kind.name.clone()) {
+                self.error(
+                    field_pat.span,
+                    format!("duplicate pattern field `{}`", field_pat.kind.name),
+                );
+                continue;
+            }
+            let Some(field) = struct_item
+                .kind
+                .fields
+                .iter()
+                .find(|field| field.kind.name == field_pat.kind.name)
+            else {
+                self.error(
+                    field_pat.span,
+                    format!("unknown field `{}`", field_pat.kind.name),
+                );
+                continue;
+            };
+            let field_ty = self.apply_type_substitutions(&field.kind.ty, &substitutions);
+            let _ = self.check_pat(&field_pat.kind.pat, &field_ty, scope, locals, seen_variants);
+        }
+        false
     }
 
     fn check_match_exhaustive(
@@ -2520,6 +2614,12 @@ fn peel_ref(ty: &Ty) -> Option<&Ty> {
         TyKind::Ref { ty, .. } => Some(ty),
         _ => None,
     }
+}
+
+fn path_with_segment(path: &Path, segment: &str, span: Span) -> Path {
+    let mut segments = path.kind.segments.clone();
+    segments.push(segment.to_owned());
+    Node::new(span, PathKind { segments })
 }
 
 fn fits_int_ty(value: &BigInt, ty: IntTy) -> bool {

@@ -14,6 +14,7 @@ pub enum TokenKind {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Keyword {
     Const,
+    Use,
     Struct,
     Enum,
     Interface,
@@ -145,6 +146,7 @@ impl Lexer<'_> {
         let text = &self.input[start..self.offset];
         let kind = match text {
             "const" => TokenKind::Keyword(Keyword::Const),
+            "use" => TokenKind::Keyword(Keyword::Use),
             "struct" => TokenKind::Keyword(Keyword::Struct),
             "enum" => TokenKind::Keyword(Keyword::Enum),
             "interface" => TokenKind::Keyword(Keyword::Interface),

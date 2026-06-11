@@ -1,0 +1,16 @@
+use std::option::Option;
+
+fn some_value() -> Option<i32> {
+    Option::Some(7)
+}
+
+fn none_value() -> Option<i32> {
+    Option::None
+}
+
+fn unwrap_or_zero(value: Option<i32>) -> i32 {
+    match value {
+        Option::Some(x) => x,
+        Option::None => 0,
+    }
+}

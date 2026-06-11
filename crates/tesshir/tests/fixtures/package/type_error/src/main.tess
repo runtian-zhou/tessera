@@ -1,0 +1,6 @@
+use math::Point;
+use math::sum;
+
+fn use_math(p: Point) -> i32 {
+    sum(p)
+}

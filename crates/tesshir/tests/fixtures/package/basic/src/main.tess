@@ -1,0 +1,15 @@
+use math::Point;
+use math::sum;
+use std::option::Option;
+
+fn use_math(p: Point) -> i32 {
+    sum(p)
+}
+
+fn build_point() -> Point {
+    Point { x: 1, y: 2 }
+}
+
+fn build_option() -> Option<i32> {
+    Option::Some(1)
+}
