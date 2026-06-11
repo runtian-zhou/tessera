@@ -24,7 +24,7 @@ pub fn check_program(program: &Program) -> TypeCheckReport {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 struct InterfaceReqs {
     methods: HashMap<String, MethodSig>,
     consts: HashMap<String, AssocConstSig>,
@@ -84,6 +84,7 @@ impl<'a> Checker<'a> {
         self.check_enums();
         self.check_interfaces();
         self.check_impls();
+        self.check_impl_conflicts();
         self.check_fns();
     }
 
@@ -271,7 +272,17 @@ impl<'a> Checker<'a> {
                             );
                         }
                         if let Some(default) = &sig.kind.default {
-                            self.eval_const_expr(default, &scope);
+                            if let Some(value) = self.eval_const_expr(default, &scope) {
+                                if !fits_int_ty(&value, sig.kind.ty) {
+                                    self.error(
+                                        default.span,
+                                        format!(
+                                            "associated const default `{value}` does not fit in {}",
+                                            sig.kind.ty
+                                        ),
+                                    );
+                                }
+                            }
                         }
                     }
                     InterfaceMemberKind::Method(sig) => {
@@ -285,6 +296,9 @@ impl<'a> Checker<'a> {
                     }
                 }
             }
+            let interface_ref = self.current_interface_ref(item);
+            let mut stack = vec![];
+            self.interface_reqs_checked(&interface_ref, &mut stack, &scope);
         }
     }
 
@@ -301,7 +315,7 @@ impl<'a> Checker<'a> {
             for member in &item.kind.members {
                 match &member.kind {
                     ImplMemberKind::AssocConst(c) => {
-                        self.eval_const_expr(&c.kind.expr, &scope);
+                        self.check_assoc_const_impl_expr(c, &scope);
                     }
                     ImplMemberKind::Method(m) => {
                         self.check_method_sig(&m.kind.sig, &scope, true);
@@ -330,14 +344,28 @@ impl<'a> Checker<'a> {
                     ImplMemberKind::AssocConst(c) if &c.kind.name == name => Some(c),
                     _ => None,
                 });
-            if provided.is_none() && sig.kind.default.is_none() {
-                self.error(
-                    item.span,
-                    format!(
-                        "impl for `{}` is missing associated const `{name}`",
-                        path_name(&interface_ref.kind.path)
-                    ),
-                );
+            match provided {
+                Some(provided) => {
+                    if provided.kind.ty != sig.kind.ty {
+                        self.error(
+                            provided.span,
+                            format!(
+                                "associated const `{name}` has type `{}`, expected `{}`",
+                                provided.kind.ty, sig.kind.ty
+                            ),
+                        );
+                    }
+                }
+                None if sig.kind.default.is_none() => {
+                    self.error(
+                        item.span,
+                        format!(
+                            "impl for `{}` is missing associated const `{name}`",
+                            path_name(&interface_ref.kind.path)
+                        ),
+                    );
+                }
+                None => {}
             }
         }
         for (name, required) in &reqs.methods {
@@ -364,6 +392,49 @@ impl<'a> Checker<'a> {
                     provided.span,
                     format!("method `{name}` signature does not match interface requirement"),
                 );
+            }
+        }
+    }
+
+    fn check_assoc_const_impl_expr(&mut self, item: &AssocConstImpl, scope: &GenericScope) {
+        if let Some(value) = self.eval_const_expr(&item.kind.expr, scope) {
+            if !fits_int_ty(&value, item.kind.ty) {
+                self.error(
+                    item.kind.expr.span,
+                    format!(
+                        "associated const `{}` value `{value}` does not fit in {}",
+                        item.kind.name, item.kind.ty
+                    ),
+                );
+            }
+        }
+    }
+
+    fn check_impl_conflicts(&mut self) {
+        for i in 0..self.impls.len() {
+            let a = self.impls[i];
+            let Some(a_interface) = &a.kind.interface else {
+                continue;
+            };
+            for j in (i + 1)..self.impls.len() {
+                let b = self.impls[j];
+                let Some(b_interface) = &b.kind.interface else {
+                    continue;
+                };
+                if path_name(&a_interface.kind.path) != path_name(&b_interface.kind.path) {
+                    continue;
+                }
+                let scope = GenericScope::default();
+                if self.ty_eq_no_diag(&a.kind.self_ty, &b.kind.self_ty, &scope) {
+                    self.error(
+                        b.span,
+                        format!(
+                            "conflicting impl of `{}` for `{}`",
+                            path_name(&a_interface.kind.path),
+                            self.ty_display(&b.kind.self_ty)
+                        ),
+                    );
+                }
             }
         }
     }
@@ -1166,7 +1237,8 @@ impl<'a> Checker<'a> {
                     return false;
                 };
                 seen_variants.insert(variant.clone());
-                let substitutions = self.enum_arg_substitutions(enum_item, expected_enum);
+                let substitutions =
+                    self.generic_arg_substitutions(&enum_item.kind.generics, expected_enum);
                 match (&variant_decl.kind.payload.kind, &args.kind) {
                     (VariantPayloadKind::Unit, EnumPatArgsKind::Unit) => {}
                     (VariantPayloadKind::Tuple(tys), EnumPatArgsKind::Tuple(pats)) => {
@@ -1206,11 +1278,54 @@ impl<'a> Checker<'a> {
                 }
                 false
             }
-            PatKind::Struct { .. } => {
-                self.error(
-                    pat.span,
-                    "standalone struct patterns are not implemented yet",
-                );
+            PatKind::Struct { path, fields } => {
+                let struct_name = path_name(path);
+                let expected_args = match &expected.kind {
+                    TyKind::Path { path, args } if path_name(path) == struct_name => args,
+                    _ => {
+                        self.error(
+                            pat.span,
+                            "struct pattern applied to non-matching struct type",
+                        );
+                        return false;
+                    }
+                };
+                let Some(struct_item) = self.structs.get(&struct_name).copied() else {
+                    self.error(path.span, format!("unknown struct `{struct_name}`"));
+                    return false;
+                };
+                let substitutions =
+                    self.generic_arg_substitutions(&struct_item.kind.generics, expected_args);
+                let mut seen_fields = HashSet::new();
+                for field_pat in fields {
+                    if !seen_fields.insert(field_pat.kind.name.clone()) {
+                        self.error(
+                            field_pat.span,
+                            format!("duplicate pattern field `{}`", field_pat.kind.name),
+                        );
+                        continue;
+                    }
+                    let Some(field) = struct_item
+                        .kind
+                        .fields
+                        .iter()
+                        .find(|field| field.kind.name == field_pat.kind.name)
+                    else {
+                        self.error(
+                            field_pat.span,
+                            format!("unknown field `{}`", field_pat.kind.name),
+                        );
+                        continue;
+                    };
+                    let field_ty = self.apply_type_substitutions(&field.kind.ty, &substitutions);
+                    let _ = self.check_pat(
+                        &field_pat.kind.pat,
+                        &field_ty,
+                        scope,
+                        locals,
+                        seen_variants,
+                    );
+                }
                 false
             }
         }
@@ -1244,13 +1359,13 @@ impl<'a> Checker<'a> {
         }
     }
 
-    fn enum_arg_substitutions(
+    fn generic_arg_substitutions(
         &self,
-        enum_item: &EnumItem,
+        generics: &[GenericParam],
         args: &[GenericArg],
     ) -> HashMap<String, Ty> {
         let mut substitutions = HashMap::new();
-        for (generic, arg) in enum_item.kind.generics.iter().zip(args) {
+        for (generic, arg) in generics.iter().zip(args) {
             if let (GenericParamKind::Type { name, .. }, GenericArgKind::Ty(ty)) =
                 (&generic.kind, &arg.kind)
             {
@@ -1354,34 +1469,61 @@ impl<'a> Checker<'a> {
                     );
                     return;
                 }
-                let expected_generics = self
+                let generic_params = self
                     .structs
                     .get(&name)
-                    .map(|item| item.kind.generics.len())
-                    .or_else(|| self.enums.get(&name).map(|item| item.kind.generics.len()));
-                match expected_generics {
-                    Some(expected) if expected == args.len() => {}
+                    .map(|item| item.kind.generics.clone())
+                    .or_else(|| self.enums.get(&name).map(|item| item.kind.generics.clone()));
+                match &generic_params {
+                    Some(expected) if expected.len() == args.len() => {}
                     Some(expected) => self.error(
                         ty.span,
                         format!(
-                            "type `{name}` expects {expected} generic arguments, got {}",
+                            "type `{name}` expects {} generic arguments, got {}",
+                            expected.len(),
                             args.len()
                         ),
                     ),
                     None => self.error(ty.span, format!("unknown type `{name}`")),
                 }
-                for arg in args {
-                    match &arg.kind {
-                        GenericArgKind::Ty(ty) => self.check_ty_wf(ty, scope, false),
-                        GenericArgKind::Const(expr) => {
-                            self.eval_const_expr(expr, scope);
+                if let Some(generic_params) = generic_params {
+                    for (arg, generic) in args.iter().zip(&generic_params) {
+                        match (&generic.kind, &arg.kind) {
+                            (GenericParamKind::Type { .. }, GenericArgKind::Ty(ty)) => {
+                                self.check_ty_wf(ty, scope, false);
+                            }
+                            (GenericParamKind::Type { name, .. }, GenericArgKind::Const(_)) => {
+                                self.error(
+                                    arg.span,
+                                    format!("generic parameter `{name}` expects a type argument"),
+                                );
+                            }
+                            (GenericParamKind::Const { name, ty }, GenericArgKind::Const(expr)) => {
+                                self.check_const_arg(expr, *ty, name, scope)
+                            }
+                            (GenericParamKind::Const { name, ty }, GenericArgKind::Ty(ty_arg)) => {
+                                let Some(expr) = self.ty_arg_as_const_expr(ty_arg) else {
+                                    self.error(
+                                        arg.span,
+                                        format!(
+                                            "generic parameter `{name}` expects a const argument"
+                                        ),
+                                    );
+                                    continue;
+                                };
+                                self.check_const_arg(&expr, *ty, name, scope);
+                            }
                         }
                     }
                 }
             }
             TyKind::Array { elem, len } => {
                 self.check_ty_wf(elem, scope, false);
-                self.eval_const_expr(len, scope);
+                if let Some(value) = self.eval_const_expr(len, scope) {
+                    if value.sign() == Sign::Minus {
+                        self.error(len.span, "array length must be nonnegative");
+                    }
+                }
             }
             TyKind::Ref { ty, .. } => self.check_ty_wf(ty, scope, allow_self),
             TyKind::Fn { params, ret } => {
@@ -1393,6 +1535,29 @@ impl<'a> Checker<'a> {
         }
     }
 
+    fn check_const_arg(&mut self, expr: &ConstExpr, ty: IntTy, name: &str, scope: &GenericScope) {
+        if let Some(value) = self.eval_const_expr(expr, scope) {
+            if !fits_int_ty(&value, ty) {
+                self.error(
+                    expr.span,
+                    format!(
+                        "const argument for `{name}` has value `{value}` which does not fit in {ty}"
+                    ),
+                );
+            }
+        }
+    }
+
+    fn ty_arg_as_const_expr(&self, ty: &Ty) -> Option<ConstExpr> {
+        let TyKind::Path { path, args } = &ty.kind else {
+            return None;
+        };
+        if !args.is_empty() {
+            return None;
+        }
+        Some(Node::new(ty.span, ConstExprKind::Path(path.clone())))
+    }
+
     fn check_where_predicates(&mut self, predicates: &[WherePredicate], scope: &GenericScope) {
         for predicate in predicates {
             match &predicate.kind {
@@ -1401,8 +1566,18 @@ impl<'a> Checker<'a> {
                     self.check_interface_ref(interface, scope);
                 }
                 WherePredicateKind::ConstEq { lhs, rhs } => {
-                    self.eval_const_expr(lhs, scope);
-                    self.eval_const_expr(rhs, scope);
+                    let lhs_value = self.eval_const_expr(lhs, scope);
+                    let rhs_value = self.eval_const_expr(rhs, scope);
+                    if let (Some(lhs_value), Some(rhs_value)) = (lhs_value, rhs_value) {
+                        if lhs_value != rhs_value {
+                            self.error(
+                                predicate.span,
+                                format!(
+                                    "const equality predicate failed: `{lhs_value}` != `{rhs_value}`"
+                                ),
+                            );
+                        }
+                    }
                 }
             }
         }
@@ -1561,14 +1736,98 @@ impl<'a> Checker<'a> {
         self.ty_eq(&a, &b, scope)
     }
 
+    fn method_sigs_equivalent(&self, a: &MethodSig, b: &MethodSig, scope: &GenericScope) -> bool {
+        a.kind.receiver.as_ref().map(|r| &r.kind) == b.kind.receiver.as_ref().map(|r| &r.kind)
+            && self.generic_params_equivalent(&a.kind.generics, &b.kind.generics, scope)
+            && a.kind.params.len() == b.kind.params.len()
+            && a.kind
+                .params
+                .iter()
+                .zip(&b.kind.params)
+                .all(|(a, b)| self.ty_eq_no_diag(&a.kind.ty, &b.kind.ty, scope))
+            && self.ty_eq_no_diag(&a.kind.ret, &b.kind.ret, scope)
+    }
+
+    fn generic_params_equivalent(
+        &self,
+        a: &[GenericParam],
+        b: &[GenericParam],
+        scope: &GenericScope,
+    ) -> bool {
+        a.len() == b.len()
+            && a.iter().zip(b).all(|(a, b)| match (&a.kind, &b.kind) {
+                (
+                    GenericParamKind::Type {
+                        name: an,
+                        bounds: ab,
+                    },
+                    GenericParamKind::Type {
+                        name: bn,
+                        bounds: bb,
+                    },
+                ) => {
+                    an == bn
+                        && ab.len() == bb.len()
+                        && ab
+                            .iter()
+                            .zip(bb)
+                            .all(|(a, b)| self.interface_refs_equivalent(a, b, scope))
+                }
+                (
+                    GenericParamKind::Const { name: an, ty: at },
+                    GenericParamKind::Const { name: bn, ty: bt },
+                ) => an == bn && at == bt,
+                _ => false,
+            })
+    }
+
+    fn interface_refs_equivalent(
+        &self,
+        a: &InterfaceRef,
+        b: &InterfaceRef,
+        scope: &GenericScope,
+    ) -> bool {
+        path_name(&a.kind.path) == path_name(&b.kind.path)
+            && a.kind.args.len() == b.kind.args.len()
+            && a.kind
+                .args
+                .iter()
+                .zip(&b.kind.args)
+                .all(|(a, b)| match (&a.kind, &b.kind) {
+                    (GenericArgKind::Ty(a), GenericArgKind::Ty(b)) => {
+                        self.ty_eq_no_diag(a, b, scope)
+                    }
+                    (GenericArgKind::Const(a), GenericArgKind::Const(b)) => {
+                        self.const_eq_no_diag(a, b, scope)
+                    }
+                    _ => false,
+                })
+    }
+
+    fn const_eq_no_diag(&self, a: &ConstExpr, b: &ConstExpr, scope: &GenericScope) -> bool {
+        let mut checker = self.checker_for_compare();
+        checker.const_eq(a, b, scope, false)
+    }
+
     fn interface_reqs(&self, interface: &InterfaceRef) -> Option<InterfaceReqs> {
-        let item = self.interfaces.get(&path_name(&interface.kind.path))?;
-        let mut reqs = InterfaceReqs {
-            methods: HashMap::new(),
-            consts: HashMap::new(),
-        };
+        let mut stack = vec![];
+        self.interface_reqs_no_diag(interface, &mut stack)
+    }
+
+    fn interface_reqs_no_diag(
+        &self,
+        interface: &InterfaceRef,
+        stack: &mut Vec<String>,
+    ) -> Option<InterfaceReqs> {
+        let name = path_name(&interface.kind.path);
+        if stack.contains(&name) {
+            return None;
+        }
+        let item = self.interfaces.get(&name).copied()?;
+        stack.push(name);
+        let mut reqs = InterfaceReqs::default();
         for super_interface in &item.kind.super_interfaces {
-            if let Some(parent) = self.interface_reqs(super_interface) {
+            if let Some(parent) = self.interface_reqs_no_diag(super_interface, stack) {
                 reqs.methods.extend(parent.methods);
                 reqs.consts.extend(parent.consts);
             }
@@ -1583,7 +1842,93 @@ impl<'a> Checker<'a> {
                 }
             }
         }
+        stack.pop();
         Some(reqs)
+    }
+
+    fn interface_reqs_checked(
+        &mut self,
+        interface: &InterfaceRef,
+        stack: &mut Vec<String>,
+        scope: &GenericScope,
+    ) -> Option<InterfaceReqs> {
+        let name = path_name(&interface.kind.path);
+        if stack.contains(&name) {
+            self.error(
+                interface.span,
+                format!("interface inheritance cycle involving `{name}`"),
+            );
+            return None;
+        }
+        let Some(item) = self.interfaces.get(&name).copied() else {
+            return None;
+        };
+        stack.push(name);
+        let mut reqs = InterfaceReqs::default();
+        for super_interface in &item.kind.super_interfaces {
+            if let Some(parent) = self.interface_reqs_checked(super_interface, stack, scope) {
+                self.merge_interface_reqs(&mut reqs, parent, super_interface.span, scope);
+            }
+        }
+        for member in &item.kind.members {
+            match &member.kind {
+                InterfaceMemberKind::Method(sig) => {
+                    self.insert_method_req(&mut reqs, sig.clone(), sig.span, scope);
+                }
+                InterfaceMemberKind::AssocConst(sig) => {
+                    self.insert_const_req(&mut reqs, sig.clone(), sig.span);
+                }
+            }
+        }
+        stack.pop();
+        Some(reqs)
+    }
+
+    fn merge_interface_reqs(
+        &mut self,
+        dst: &mut InterfaceReqs,
+        src: InterfaceReqs,
+        span: Span,
+        scope: &GenericScope,
+    ) {
+        for (_, sig) in src.methods {
+            self.insert_method_req(dst, sig, span, scope);
+        }
+        for (_, sig) in src.consts {
+            self.insert_const_req(dst, sig, span);
+        }
+    }
+
+    fn insert_method_req(
+        &mut self,
+        reqs: &mut InterfaceReqs,
+        sig: MethodSig,
+        span: Span,
+        scope: &GenericScope,
+    ) {
+        if let Some(existing) = reqs.methods.get(&sig.kind.name) {
+            if !self.method_sigs_equivalent(existing, &sig, scope) {
+                self.error(
+                    span,
+                    format!("conflicting inherited method `{}`", sig.kind.name),
+                );
+            }
+            return;
+        }
+        reqs.methods.insert(sig.kind.name.clone(), sig);
+    }
+
+    fn insert_const_req(&mut self, reqs: &mut InterfaceReqs, sig: AssocConstSig, span: Span) {
+        if let Some(existing) = reqs.consts.get(&sig.kind.name) {
+            if existing.kind.ty != sig.kind.ty {
+                self.error(
+                    span,
+                    format!("conflicting inherited associated const `{}`", sig.kind.name),
+                );
+            }
+            return;
+        }
+        reqs.consts.insert(sig.kind.name.clone(), sig);
     }
 
     fn current_interface_ref(&self, item: &InterfaceItem) -> InterfaceRef {
@@ -1627,12 +1972,18 @@ impl<'a> Checker<'a> {
         name: &str,
         scope: &GenericScope,
     ) -> Option<BigInt> {
-        let interface_name = path_name(interface);
+        let interface_ref = Node::new(
+            interface.span,
+            InterfaceRefKind {
+                path: interface.clone(),
+                args: vec![],
+            },
+        );
         for imp in self.impls.clone() {
             let Some(impl_interface) = &imp.kind.interface else {
                 continue;
             };
-            if path_name(&impl_interface.kind.path) != interface_name {
+            if !self.interface_implies(impl_interface, &interface_ref) {
                 continue;
             }
             if !self.ty_eq_no_diag(ty, &imp.kind.self_ty, scope) {
@@ -1728,18 +2079,49 @@ impl<'a> Checker<'a> {
 
     fn proves_implements(&self, ty: &Ty, interface: &InterfaceRef, scope: &GenericScope) -> bool {
         scope.obligations.iter().any(|(ob_ty, ob_interface)| {
-            self.ty_eq_no_diag(ty, ob_ty, scope)
-                && path_name(&ob_interface.kind.path) == path_name(&interface.kind.path)
+            self.ty_eq_no_diag(ty, ob_ty, scope) && self.interface_implies(ob_interface, interface)
         }) || self.impls.iter().any(|imp| {
             imp.kind
                 .interface
                 .as_ref()
                 .map(|imp_interface| {
                     self.ty_eq_no_diag(ty, &imp.kind.self_ty, scope)
-                        && path_name(&imp_interface.kind.path) == path_name(&interface.kind.path)
+                        && self.interface_implies(imp_interface, interface)
                 })
                 .unwrap_or(false)
         })
+    }
+
+    fn interface_implies(&self, actual: &InterfaceRef, required: &InterfaceRef) -> bool {
+        let required_name = path_name(&required.kind.path);
+        let mut stack = vec![];
+        self.interface_implies_name(actual, &required_name, &mut stack)
+    }
+
+    fn interface_implies_name(
+        &self,
+        actual: &InterfaceRef,
+        required_name: &str,
+        stack: &mut Vec<String>,
+    ) -> bool {
+        let actual_name = path_name(&actual.kind.path);
+        if actual_name == required_name {
+            return true;
+        }
+        if stack.contains(&actual_name) {
+            return false;
+        }
+        let Some(item) = self.interfaces.get(&actual_name).copied() else {
+            return false;
+        };
+        stack.push(actual_name);
+        let result = item
+            .kind
+            .super_interfaces
+            .iter()
+            .any(|parent| self.interface_implies_name(parent, required_name, stack));
+        stack.pop();
+        result
     }
 
     fn substitute_self(&self, ty: &Ty, self_ty: &Ty) -> Ty {
@@ -1890,7 +2272,12 @@ impl<'a> Checker<'a> {
     }
 
     fn ty_eq_no_diag(&self, a: &Ty, b: &Ty, scope: &GenericScope) -> bool {
-        let mut checker = Checker {
+        let mut checker = self.checker_for_compare();
+        checker.ty_eq_impl(a, b, scope, false)
+    }
+
+    fn checker_for_compare(&self) -> Checker<'a> {
+        Checker {
             program: self.program,
             structs: self.structs.clone(),
             enums: self.enums.clone(),
@@ -1901,8 +2288,7 @@ impl<'a> Checker<'a> {
             const_values: self.const_values.clone(),
             evaluating_consts: HashSet::new(),
             diagnostics: vec![],
-        };
-        checker.ty_eq_impl(a, b, scope, false)
+        }
     }
 
     fn ty_eq_impl(&mut self, a: &Ty, b: &Ty, scope: &GenericScope, emit_errors: bool) -> bool {

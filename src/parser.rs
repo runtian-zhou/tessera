@@ -463,7 +463,7 @@ impl Parser {
         if self.eat_symbol(TokSymbol::Lt).is_none() {
             return params;
         }
-        while !self.at_symbol(TokSymbol::Gt) && !self.at_eof() {
+        while !self.at_generic_gt() && !self.at_eof() {
             let start = self.peek().span.start;
             if self.eat_keyword(Keyword::Const).is_some() {
                 let name = match self.expect_ident() {
@@ -510,11 +510,11 @@ impl Parser {
             if self.eat_symbol(TokSymbol::Comma).is_none() {
                 break;
             }
-            if self.at_symbol(TokSymbol::Gt) {
+            if self.at_generic_gt() {
                 break;
             }
         }
-        self.expect_symbol(TokSymbol::Gt);
+        self.expect_generic_gt();
         params
     }
 
@@ -724,12 +724,9 @@ impl Parser {
         if self.eat_symbol(TokSymbol::Lt).is_none() {
             return args;
         }
-        while !self.at_symbol(TokSymbol::Gt) && !self.at_eof() {
+        while !self.at_generic_gt() && !self.at_eof() {
             let start = self.peek().span.start;
-            let arg = if self.at_int()
-                || self.at_symbol(TokSymbol::Minus)
-                || self.at_symbol(TokSymbol::Plus)
-            {
+            let arg = if self.looks_like_const_generic_arg() {
                 let Some(expr) = self.parse_const_expr() else {
                     break;
                 };
@@ -744,12 +741,101 @@ impl Parser {
             if self.eat_symbol(TokSymbol::Comma).is_none() {
                 break;
             }
-            if self.at_symbol(TokSymbol::Gt) {
+            if self.at_generic_gt() {
                 break;
             }
         }
-        self.expect_symbol(TokSymbol::Gt);
+        self.expect_generic_gt();
         args
+    }
+
+    fn looks_like_const_generic_arg(&self) -> bool {
+        if self.at_int()
+            || self.at_symbol(TokSymbol::Minus)
+            || self.at_symbol(TokSymbol::Plus)
+            || self.at_symbol(TokSymbol::Lt)
+        {
+            return true;
+        }
+
+        let mut depth = 0usize;
+        let mut idx = self.pos;
+        while idx < self.tokens.len() {
+            match &self.tokens[idx].kind {
+                TokenKind::Symbol(TokSymbol::Lt | TokSymbol::LParen | TokSymbol::LBracket) => {
+                    depth += 1;
+                }
+                TokenKind::Symbol(TokSymbol::Gt | TokSymbol::RParen | TokSymbol::RBracket) => {
+                    if depth == 0 {
+                        return false;
+                    }
+                    depth -= 1;
+                }
+                TokenKind::Symbol(TokSymbol::Shr) if depth == 0 => {
+                    return self.token_starts_const_expr(idx + 1);
+                }
+                TokenKind::Symbol(TokSymbol::Shr) => {
+                    if depth <= 1 {
+                        return false;
+                    }
+                    depth -= 2;
+                }
+                TokenKind::Symbol(TokSymbol::Comma) if depth == 0 => return false,
+                TokenKind::Symbol(
+                    TokSymbol::Plus
+                    | TokSymbol::Minus
+                    | TokSymbol::Star
+                    | TokSymbol::Slash
+                    | TokSymbol::Percent
+                    | TokSymbol::Shl
+                    | TokSymbol::Amp
+                    | TokSymbol::Pipe
+                    | TokSymbol::Caret,
+                ) if depth == 0 => return true,
+                TokenKind::Keyword(Keyword::As) if depth == 0 => return true,
+                TokenKind::Eof => return false,
+                _ => {}
+            }
+            idx += 1;
+        }
+        false
+    }
+
+    fn token_starts_const_expr(&self, idx: usize) -> bool {
+        matches!(
+            self.tokens.get(idx).map(|token| &token.kind),
+            Some(TokenKind::Int(_))
+                | Some(TokenKind::Ident(_))
+                | Some(TokenKind::Symbol(
+                    TokSymbol::Plus | TokSymbol::Minus | TokSymbol::LParen | TokSymbol::Lt
+                ))
+        )
+    }
+
+    fn at_generic_gt(&self) -> bool {
+        matches!(
+            self.peek().kind,
+            TokenKind::Symbol(TokSymbol::Gt | TokSymbol::Shr)
+        )
+    }
+
+    fn expect_generic_gt(&mut self) -> PResult<Token> {
+        if self.at_symbol(TokSymbol::Gt) {
+            return Some(self.bump());
+        }
+        let token = self.peek().clone();
+        if matches!(token.kind, TokenKind::Symbol(TokSymbol::Shr)) {
+            self.tokens[self.pos] = Node::new(
+                Span::new(token.span.start + 1, token.span.end),
+                TokenKind::Symbol(TokSymbol::Gt),
+            );
+            return Some(Node::new(
+                Span::new(token.span.start, token.span.start + 1),
+                TokenKind::Symbol(TokSymbol::Gt),
+            ));
+        }
+        self.error(self.peek().span, "expected symbol `Gt`");
+        None
     }
 
     fn parse_const_expr(&mut self) -> PResult<ConstExpr> {
@@ -1281,6 +1367,14 @@ impl Parser {
                         },
                     ));
                 }
+                if self.eat_symbol(TokSymbol::LBrace).is_some() {
+                    let fields = self.parse_field_pat_list(TokSymbol::RBrace)?;
+                    let end = self.expect_symbol(TokSymbol::RBrace)?.span.end;
+                    return Some(Node::new(
+                        Span::new(path.span.start, end),
+                        PatKind::Struct { path, fields },
+                    ));
+                }
                 Some(Node::new(
                     path.span,
                     PatKind::Binding {
@@ -1364,8 +1458,16 @@ impl Parser {
         loop {
             let name = self.expect_ident()?;
             let start = name.span.start;
-            self.expect_symbol(TokSymbol::Colon)?;
-            let pat = self.parse_pat()?;
+            let pat = if self.eat_symbol(TokSymbol::Colon).is_some() {
+                self.parse_pat()?
+            } else {
+                Node::new(
+                    name.span,
+                    PatKind::Binding {
+                        name: name.kind.clone(),
+                    },
+                )
+            };
             fields.push(Node::new(
                 Span::new(start, pat.span.end),
                 FieldPatKind {

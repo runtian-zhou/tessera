@@ -48,6 +48,52 @@ impl Buffer for Page {
 }
 "#;
 
+pub const STRUCT_PATTERN_PROGRAM: &str = r#"
+struct Pair {
+    x: i32,
+    y: i32,
+}
+
+fn first(pair: Pair) -> i32 {
+    match pair {
+        Pair { x, y: _ } => x,
+    }
+}
+"#;
+
+pub const SUPERINTERFACE_ASSOC_CONST_PROGRAM: &str = r#"
+interface ParentBuffer {
+    const SIZE: usize;
+}
+
+interface ChildBuffer: ParentBuffer {}
+
+fn use_parent_size<T: ChildBuffer>(buf: [u8; <T as ParentBuffer>::SIZE]) -> usize {
+    0
+}
+"#;
+
+pub const CONST_GENERIC_TYPE_PROGRAM: &str = r#"
+struct Buffer<const N: usize> {
+    data: [u8; N],
+}
+
+struct Holder<const N: usize> {
+    buffer: Buffer<N>,
+    buffer_plus_one: Buffer<N + 1>,
+}
+"#;
+
+pub const NESTED_GENERIC_TYPE_PROGRAM: &str = r#"
+struct Wrap<T> {
+    value: T,
+}
+
+struct Nested {
+    value: Wrap<Wrap<i32>>,
+}
+"#;
+
 pub const INTERFACE_AS_TYPE_PROGRAM: &str = r#"
 interface Reader {
     fn read(self: &Self) -> i32;
